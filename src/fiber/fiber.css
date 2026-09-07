@@ -1,0 +1,1021 @@
+/* Fiber visualization chrome.
+   Deliberately thin: the shared pieces (.label, .chip, .chips, .meta, .note)
+   already come from styles.css, and anything defined here is only what the
+   micro-scale view adds. Colours reference the same variables so the panel
+   cannot drift away from the explorer's. */
+
+/* ONE COLUMN. The 272 px panel on the right came off on 2026-08-30 at the
+   owner's word ("right sidebar 삭제해"), and the census that preceded it is the
+   argument: measured on all three scales at 1280x860, the column was 272x812
+   and its lower two thirds were blank paper — `CellReadout` returns null while
+   `SHOW_FIGURES` is off, `FiberMetrics` nearly so, and what was left standing
+   was a handful of chips, one prompt each, and two captions that describe
+   nothing that renders. `docs/objective.md`'s Gizmos section is the standard it
+   failed: "nothing on screen is inert".
+   The chips moved to `.transport`, top-left, where the same day's design pass
+   put the toolbar. */
+.fiber {
+  display: grid;
+  grid-template-columns: 1fr;
+  /* The row, like `.body`'s, has to be bounded or the panel grows the layout
+     instead of scrolling inside it. Measured 2026-08-22 at 1280x800: `.body`
+     handed this element a correct 676 px, and its own undeclared — therefore
+     `auto`, therefore content-sized — row came back 707, which is where the
+     panel's 1,106 px of readings pushed it. The 31 px difference printed over
+     the footer.
+
+     `minmax(0, 1fr)` rather than `1fr`: `1fr` is `minmax(auto, 1fr)` and the
+     auto minimum is the same content floor.
+
+     Shared by all three scale scenes, so this is also why the signalling case
+     was intermittent — its content sits near the boundary and crossed it only
+     on some runs. */
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+}
+
+/* THE SCENE WITH NO PANEL TAKES THE WHOLE WIDTH. The rule above reserves a
+   272 px track for a sidebar, and the fibre's was deleted on 2026-08-30 at the
+   owner's word. The track does not collapse on its own — an empty grid column
+   is still a column — so at 1280 the stage ended at x=1008 with 272 px of blank
+   paper beside it. A modifier rather than an edit to `.fiber`: that rule is the
+   grid the cell and signalling scenes sit in as well, and both still have a
+   panel to hold. */
+.fiber--stage-only {
+  grid-template-columns: 1fr;
+}
+
+.fiber__stage {
+  position: relative;
+  min-width: 0;
+  /* press.css's stage colour — the fiber sits on the same paper as the body. */
+  background: #faf8f5;
+}
+
+.fiber__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fiber__panel {
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+/* ---- viewport callouts --------------------------------------------------- */
+
+/* `.fiber-label` AND `.fiber-label__swatch` USED TO LIVE HERE and are gone with
+   `FiberLabels.jsx`. They drew one flat plate per anchor, which could not carry
+   a number, could not carry an evidence badge, and could not see its neighbours
+   — the media query below them existed because "Titin" landed 18 px² over
+   "Actin · thin" at 320 px and the only available fix was to shrink the type.
+   The scene draws its callouts through `gizmo/Gizmos.jsx` now, which solves
+   placement against the whole constellation and runs a leader line, so that
+   collision is a guarantee instead of a stylesheet workaround, and the two
+   callouts that carry numbers can carry the badge that makes them shippable.
+
+   Nothing replaces them here: `gizmo.css` already copies this file's paper,
+   rule colour and 10px uppercase micro-label so a callout in the viewport and a
+   heading in the panel still read as one system. */
+
+/* THE ONE SENTENCE ON THE STAGE. Top centre, opposite the transport at the
+   bottom, so the two things floating over the tissue never argue about the same
+   pixels. It appears inside `forceIsFalling` and is absent the rest of the run,
+   which is why it is not allowed to reflow anything: `position: absolute` means
+   its arrival cannot nudge the canvas. Same plate as a callout — it is a
+   callout, on the whole picture rather than on one torus. */
+/* THE VOICE AND THE STATUS ARE ONE ELEMENT NOW, AND NEITHER IS IN A BOX.
+
+   WHAT WAS HERE. Two costumes in one slot: a black band while a pass spoke, a
+   cream pill the rest of the time. The owner, 2026-08-30, having asked for this
+   more times than for anything else: "근데 계속 보이는 이 흰색 배경에 텍스트
+   pill과 이 검정색은 말도 안돼 진짜 대대적으로 개선이 필요해".
+
+   The black one was mine, three days old, and it was the wrong answer to a
+   real observation — that narration dressed as a chip reads as interface. It
+   fixed that by making the words the only dark object on a cream stage, which
+   is a second interface, louder. THE OBJECTION WAS NEVER THE COLOUR. It is that
+   a rectangle of paint sits between the reader and the picture the words are
+   about, and paint cannot be argued out of being paint.
+
+   So: no plate, no border, no fill, no blur, at either weight. The words sit ON
+   the picture and stay legible by a halo in the stage's own paper — five short
+   shadows, which is what a map label does over terrain and what a title card
+   does over film. Nothing to read as a container, nothing with edges to resize
+   between sentences.
+
+   What still separates status from voice is what always should have: size and
+   weight. The base rule is the standing note. `--tour` is a sentence somebody
+   is saying, one step up, and it fades in rather than snapping so a new line
+   reads as speech rather than as a caption changing. */
+.fiber__spent.fiber__spent--tour {
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: 0.005em;
+  color: var(--text);
+  /* TWO LINES' ROOM, ALWAYS — the one thing worth keeping from the box.
+     Measured across all three passes 2026-08-30: a two-line sentence grew
+     UPWARD off a fixed bottom edge (y 612 -> 589), so line one moved the moment
+     line two arrived. Reserving the second line is now free: there is no box to
+     see the reserved space in. */
+  min-height: 3.1em;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  /* THE WORDS READ FROM THE LEFT, because they now begin with a name rather
+     than being centred under a picture. Centring is a subtitle's habit and
+     `balance` is its typesetting; a headed paragraph wants neither. */
+  text-align: left;
+  text-wrap: pretty;
+}
+
+/* THE FADE MOVED ONTO THE INNER SPAN, AND IT NEVER RAN BEFORE. `.fiber__spent`
+   stays mounted across a whole demonstration — it is the `role="status"` live
+   region and unmounting it would stop a screen reader hearing the next line —
+   so `animation … both` on the paragraph ran ONCE, at mount, and every line
+   after the first appeared with no fade at all.
+   `tourPace.test.js` has been reading this declaration's 260 out of this file
+   and subtracting it from every beat's budget, for twenty-three beats, on the
+   strength of a fade that did not happen. Keyed on the line, the span remounts
+   per sentence, the fade runs per sentence, and the gate's arithmetic becomes
+   true for the first time.
+   IT MUST STAY IN THIS FILE AND KEEP THIS NAME: the gate matches
+   `/animation:\s*tour-line\s+(\d+)ms/` against `fiber.css`'s text, and a miss
+   makes `FADE_MS` NaN — every `have < need` comparison then reads false and
+   twenty-three beats stop being checked while three tests still report green. */
+.say__body {
+  animation: tour-line 260ms ease both;
+}
+
+/* THE PART'S OWN NAME, RUN INTO THE FIRST LINE. Canon D2ⓐ and the owner's
+   words for what a tour has to do: *"모든 층 처음에는 다 알려줘야돼 — apmk가
+   뭔지, this is the ampk, this is calcium, calcium does this"*. A name beside a
+   sentence about it, in two separate objects, made the visitor carry one to the
+   other; run in, the sentence says what it is about before it says anything.
+   Verbatim from the anchor's own `label`, uppercased by CSS rather than
+   retyped, so the gloss after the `·` survives — that gloss is why
+   `gate-legibility` lets an acronym like AMPK on screen at all.
+   NOT `nowrap`: "MYOFIBRIL · WHAT CONTRACTED UPSTAIRS" is 36 characters and has
+   to be allowed to wrap.
+   The orange is legible at 11px only because the halo is under it — 4.73:1 on
+   the stage's paper, 2.24:1 on bare actin. Never take the halo off this. */
+.say__of {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  /* WAS `#b4530a` — the same accent the press-ring used, so the part's name in
+     the bot's line agreed by colour with a mark that no longer exists (2026-09-06,
+     *"이 orange accent on parts 개 ㅈ같아 (everywhere)"*). It is a name, and a
+     name does not need a hue: weight and the letterspacing above already set it
+     apart from the sentence it introduces. The halo the note above insists on
+     stays — it was never carrying the colour, it was carrying legibility over
+     bare actin. */
+  color: var(--text);
+  margin-right: 0.55em;
+}
+
+/* THE WORDS LEAVE THE FOOT AND STAND WITH WHAT THEY ARE ABOUT — canon D2ⓐ,
+   after the owner said the same thing four ways over two days and I kept
+   hearing it as a complaint about boxes. *"밑에 박아두지마라 가장 효과적인
+   위치를 찾아라"*, and: *"판을 좀 자유롭게 사용해라 … think of drawing, drawing
+   a palette"*.
+
+   A demonstration's sentence hangs 120 px under the RING THE VISITOR PRESSED,
+   travelling with it as the camera moves. The veil's clear hole is 105 px, so
+   the words sit just outside the lit disc — close enough to belong to it, far
+   enough not to cover it.
+
+   POSITION IS A ≥1001 px AFFORDANCE AND THE RUN-IN NAME IS THE DESIGN AT EVERY
+   WIDTH. Below that the block keeps the foot, because a 320 px stage has no
+   room to hang anything off anything; what carries the subject there is the
+   name, not the place. That trade is stated rather than hidden. */
+@media (min-width: 1001px) {
+  .fiber__spent.fiber__spent--tour {
+    --say-w: 400px;
+    --say-gap: 120px;
+    width: var(--say-w);
+    /* 152 clears the level ladder (left 16, ~120 wide, vertically centred);
+       132 clears the ways out (top 16, ~100 tall). Both are up during a
+       demonstration — `tourOn` is only the arrival cascade. */
+    left: clamp(152px, calc(var(--say-x, 50%) - 24px), calc(100% - var(--say-w) - 16px));
+    top: clamp(132px, calc(var(--say-y, 50%) + var(--say-gap)), calc(100% - 120px));
+    bottom: auto;
+    transform: none;
+    /* FOUR LINES, ALWAYS. The longest headed sentence in the app is the
+       signalling trunk's answer at 135 characters plus a ~20-character name,
+       which is three lines at this measure; nothing reaches five. A box that
+       never resizes is what stops line one moving when line two arrives — the
+       defect this file recorded on 2026-08-30 and the one thing worth keeping
+       from the plate it recorded it about. */
+    min-height: 6.1em;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  /* Flipped when the block would run off the foot — written by `Gizmos`. */
+  [data-say-side="above"] .fiber__spent--tour {
+    top: auto;
+    bottom: calc(100% - var(--say-y, 50%) + var(--say-gap));
+    justify-content: flex-end;
+  }
+  /* THE OPENER HAS NO PART, SO IT HAS NO ANCHOR. It is what the scale says
+     about itself before anybody presses anything, and it takes a declared home
+     rather than the last press's coordinates. */
+  .fiber__spent--tour.fiber__spent--opener {
+    left: 16px;
+    top: auto;
+    bottom: 100px;
+  }
+}
+@keyframes tour-line {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fiber__spent--tour { animation: none; }
+}
+
+/* THE ONE AFFORDANCE THAT NEEDS NO WORDS.
+   `docs/gizmo-slot.md` gives a viewer See, Turn and Learn — the plate, the
+   object, the badge that opens the record. Measured 2026-08-27 across all five
+   screens, the Turn was invisible on the three that matter most: the explorer
+   draws a view cube inside its canvas, the body's canvas is `cursor: pointer`
+   (which is about PICKING a muscle), and these three were `cursor: auto`. No
+   cube, no cursor, no hint, on the three scales whose entire subject is an
+   object a viewer is invited to look around.
+   Unambiguous here in a way it is not on the body: these canvases carry no
+   pointer handlers at all — the chips and the plates are DOM over the top — so
+   a press on them can only mean a drag. The body keeps `pointer`, and
+   `gate-legibility.spec.js` asserts both so the difference stays a decision. */
+.fiber__stage canvas {
+  cursor: grab;
+}
+.fiber__stage canvas:active {
+  cursor: grabbing;
+}
+
+
+
+@media (max-width: 420px) {
+  /* Same trade the strip made here: this is a corner of a 269 px stage, and a
+     notice is not what a viewer came for. */
+}
+
+.fiber__spent {
+  position: absolute;
+  /* AT THE FOOT, LIKE A SUBTITLE — design pass 2026-08-30. The owner: "the
+     text is nice and well written but placement of it... its at the top". A
+     sentence narrating a picture reads under it, where every film puts it;
+     12px from the top read as a header, which is the furniture the 2026-08-25
+     header purge removed. 64px clears the transport (bottom 12px + 41px tall)
+     with a seam. */
+  /* 100, up from 64 after the dark-subtitle screenshot: the layout solver
+     clamps off-frame plates into a strip along the stage's bottom edge, and at
+     64 the subtitle sat ON that strip — half-covering the one plate the pass
+     had just lit. 100 clears the strip and still reads as the picture's foot. */
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  margin: 0;
+  /* An absolute box at `left: 50%` with no width shrinks to fit the RIGHT
+     half only — translateX re-centres the pixels, not the layout. At 320 px
+     that halved the line to 160 px and wrapped one sentence five deep.
+     max-content, then the cap. */
+  /* A FIXED MEASURE, NOT `max-content`. Shrink-wrapping resized the line on
+     every beat — 283, 622, 502, 361, 515 px, both edges moving — and a reader
+     spent the first moment of each sentence finding it again. With no box to
+     see, the measure is still what stops the words re-flowing under themselves.
+     `left: 50%` with no width would shrink to the RIGHT half only, which at
+     320 px wrapped one sentence five deep; hence a declared width. */
+  width: min(560px, calc(100% - 24px));
+  text-align: center;
+  /* A ONE-WORD LAST LINE IS A BOX'S HABIT. Without a plate around them the
+     words are the only shape on screen, so a stranded "it." at the foot reads
+     as a mistake rather than as wrapping. `balance` is the browser's own even
+     split and it degrades to normal wrapping where it is not supported. */
+  text-wrap: balance;
+  pointer-events: none;
+  /* THE HALO IS THE WHOLE OF THE BACKGROUND. Five offsets in the stage's own
+     paper (`#faf8f5`, `.fiber__stage`'s colour, not a new one) plus a soft
+     bloom: enough to hold a dark word over a mid-tone filament, with no edge
+     anywhere for a reader to see as a container. This is the deletion the owner
+     asked for — the plate above says why at length. */
+  text-shadow:
+    0 1px 0 #faf8f5,
+    0 -1px 0 #faf8f5,
+    1px 0 0 #faf8f5,
+    -1px 0 0 #faf8f5,
+    0 0 9px #faf8f5;
+  /* NOT `.note`, which is what this was wearing in the panel: 11px in
+     `--muted`. Muted is right for a caveat sitting under a chart and wrong for
+     the one thing this scale asserts, over tissue rather than over paper. Full
+     text colour, one step up in size, still smaller than a gizmo's value. */
+  /* One step up again for the subtitle position — read at stage distance. */
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+/* THE BADGE INSIDE IT STILL TAKES CLICKS. `.fiber__spent` is
+   `pointer-events: none` so a sentence across the stage does not swallow a drag
+   on a scene a viewer orbits — and Q3 R5 put an evidence badge inside it, which
+   inherited that and became a §5 record nobody could reach. `a-number-says-
+   where-it-came-from` caught it as a 90 s click timeout on the one control the
+   sentence carries. Same trick `.transport > *` uses one file over. */
+.fiber__spent .evidence {
+  pointer-events: auto;
+}
+
+/* ON A PHONE THE SENTENCE IS COMPETING FOR THE PICTURE, NOT SITTING ON IT.
+   Measured 2026-08-26 at 320x640: the cell stage is 269 px tall, the transport
+   takes 53 and this line took 74 — 27.5% of the picture for one sentence, and
+   `Gizmos` reserves every pixel of it so a plate cannot be painted over. That
+   left a 142 px band for three plates and the solver crammed two of them 4 px
+   apart, which `gate-legibility` reported as text over text.
+
+   One step down in size and a tighter inset, at the width the scales already
+   fold their labels at. Nothing is dropped — §9's rule is that the sentence
+   stays whole, not that it stays 12px. */
+/* THE PHONE'S OWN SIZE FOR THE VOICE.
+   The tour block above is a doubled selector, so it outranks the plain
+   `.fiber__spent` rule inside the phone media query below — and the first
+   version of this design shipped 17px onto a 288 px box, where a sentence
+   wrapped to three lines and took 35% of a 269 px stage. Same specificity
+   here, so the phone wins where the phone should. Three lines' room rather
+   than two: at this measure the longer beats genuinely need three, and a
+   reserved line the box does not use is cheaper than a box that moves. */
+@media (max-width: 420px) {
+  .fiber__spent.fiber__spent--tour {
+    /* THREE LINES' ROOM at this measure — the longer sentences genuinely need
+       three, and reserved room the words do not use costs nothing now that
+       there is no box to see it in. */
+    min-height: 4.2em;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 420px) {
+  /* `top: 4px` predates the 2026-08-30 foot move and survived it. With the
+     base rule now saying `bottom: 100px`, an absolute box given BOTH edges
+     stretches between them — at 320 px the subtitle became a stage-tall blob,
+     and 999px of radius rounded it into a dark circle sitting on the
+     transport. The phone keeps the foot, just closer to it: the transport
+     lives top-left on these scales now, so the bottom edge is free. */
+  .fiber__spent {
+    bottom: 12px;
+    width: calc(100% - 16px);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+/* ---- the level ladder, floating on the stage ----------------------------- */
+
+/* THE SCALE SWITCH, ON THE PICTURE IT SWITCHES — canon F2, 2026-08-30.
+   It was three `.chip`s in the drawer under a `Scale` heading. `Ways`' own note
+   writes the corner grammar this joins: top-left is ☰ and the application's
+   name, top-right is the ways out, and the way IN "is in the picture, beside
+   the thing you would enter". A control that swaps the object is the same kind
+   of thing, so it is on the stage rather than behind a press.
+
+   THE LEFT EDGE, VERTICALLY CENTRED, AND THAT IS THE WHOLE PLACEMENT ARGUMENT.
+   Three corners are spoken for and the fourth is not free either: the subtitle
+   `.fiber__spent` owns the stage's foot, centred, at `bottom: 100px` on a
+   desktop and `bottom: 12px` on a phone — and a bottom-LEFT box tall enough to
+   hold three rungs reaches into that band at every width between 421 and 700 px,
+   where the subtitle is still at 100 and a 90 px ladder's top edge is at 106.
+   Measured that way round before this was moved: the mid-left is the one place
+   that clears the notices (top), the ways (top-right) and the subtitle (foot)
+   at 320, 768 and 1280 alike, with no breakpoint deciding where it lives.
+
+   ONE THING IT DOES NOT GET: the gizmo solver does not know it is here.
+   `Gizmos.jsx` reserves a band at the stage's head and foot only, and the hook
+   it reads is a `.transport` child that this scale deliberately no longer has
+   (`fiberChrome.test.js` forbids bringing the class back). So a plate can be
+   placed over this, and the ladder's own opaque ground is what makes that
+   legible rather than a collision — the same ground `.fiber__notice` and
+   `.ways__go` use, for the same reason. */
+/* TOP LEFT, UNDER THE HEADING — 2026-09-06, owner: *"이 toggle 왼쪽 위로 당겨"*.
+   It sat at `top: 50%`, vertically centred on the left edge, which put it beside
+   the middle of the sarcomere: the one control that says WHICH picture you are
+   looking at was floating in the picture rather than standing with the name of
+   it. The heading now says the level too (`FIBER · Fascicle`), so the ladder
+   belongs directly under the words it agrees with.
+   56 is the same clearance `cell.css` derived for its own top-left stack: the
+   two-line heading hangs from 12 and runs to about 46. */
+.fiber-levels {
+  position: absolute;
+  left: 16px; /* TOP-LEFT — 2026-09-07, owner (FIBER pace 6): *"오른쪽이 아니라 왼쪽 위"*; the compare meters share the corner and never the moment (tour only) */
+  top: 56px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb, #faf8f5 90%, transparent);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 18px rgba(38, 34, 29, 0.12);
+}
+
+/* THE SPINE. `LEVEL_ORDER` runs outer to inner and the rungs are drawn in that
+   order, so the column of dots reads down like a depth gauge — which is the
+   move the control makes. Inset to the first and last dot's centre so the line
+   connects them instead of overshooting into the padding. */
+.fiber-levels::before {
+  content: "";
+  position: absolute;
+  left: 20.5px; /* 7 (pad) + 4 (rung pad) + 5 (dot margin) + 4.5 (half a 9px dot) — owner, FIBER 9: the line through each dot's centre */
+  top: 20px;
+  bottom: 20px;
+  width: 1px;
+  background: var(--line);
+  pointer-events: none;
+}
+
+.fiber-levels__rung {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 13px 5px 4px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.fiber-levels__rung:hover { color: var(--text); }
+.fiber-levels__rung:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Drawn over the spine, so the line passes behind the ring rather than through
+   it — an unfilled dot has to read as a stop on the gauge, not a gap in it. */
+.fiber-levels__dot {
+  position: relative;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-left: 5px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #faf8f5;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+/* WHERE YOU ARE, SAID TWICE — the filled dot and the lit rung. One of the two
+   is colour alone, which is why there are two: the dot fills AND the row takes
+   a ground, so the state survives a viewer who cannot tell the accent from the
+   rule colour. */
+.fiber-levels__rung--on {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+}
+/* THE NAMES SWITCH inside the level plate. A rung says WHERE you are and is a
+   radio; this says WHAT IS DRAWN and is a toggle, so it is separated by the
+   plate's own hairline rather than styled as a fourth rung — a toggle that
+   looks like a rung reads as a fourth level of zoom. */
+.fiber-levels__names {
+  margin-top: 5px;
+  padding: 5px 9px 4px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 9px 9px;
+  background: none;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+}
+.fiber-levels__names:hover { color: var(--text); }
+.fiber-levels__names:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fiber-levels__names--on { color: var(--text); font-weight: 600; }
+
+.fiber-levels__rung--on .fiber-levels__dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* The stage is 269 px tall at 320x640 and this is 76 px of it; the type comes
+   down one step rather than the ladder losing a rung, because a level switch
+   missing a level is not a smaller control, it is a different one. */
+@media (max-width: 420px) {
+  .fiber-levels {
+    left: 8px;
+    top: 56px;
+    padding: 5px;
+    border-radius: 12px;
+  }
+  .fiber-levels::before { left: 14px; top: 17px; bottom: 17px; }
+  .fiber-levels__rung {
+    gap: 7px;
+    padding: 4px 10px 4px 3px;
+    font-size: 10.5px;
+  }
+  .fiber-levels__dot { width: 7px; height: 7px; }
+}
+
+/* It recedes with the rest of the chrome while the descent film plays — the
+   same rule `.ways`, `.app-title` and `.transport` take in styles.css. A
+   control lit inside the shot it starts is the previz defect `descent.spec.js`
+   measures. */
+[data-cinematic] .fiber-levels {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiber-levels__rung,
+  .fiber-levels__dot { transition: none; }
+}
+
+/* ---- controls ------------------------------------------------------------ */
+
+.fiber-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.fiber-controls input[type="range"] {
+  width: 100%;
+  /* 16 px is the UA default height of a range and a thumb needs 24 (WCAG 2.2
+     §2.5.8). Growing `height` grows the element's BOX while the UA goes on
+     drawing the track at its own thickness inside it, so the hit area gets
+     taller and the picture does not change.
+     THE RULE THIS USED TO CITE IS GONE: `styles.css` carried the same fix for
+     the transport's scrubber, and that whole block went with `Timeline.jsx` on
+     2026-08-31. The fact is written out here rather than pointed at, because a
+     cross-reference is the first thing a deletion breaks. */
+  height: 24px;
+}
+
+.fiber-mode-note {
+  margin-top: 0.5rem;
+}
+
+/* ---- readout ------------------------------------------------------------- */
+
+.fiber-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fiber-phase {
+  margin: 0 0 0.8rem;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fiber-metrics .meta {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+/* Name and evidence word on one line, value under them.
+
+   The two-column grid the rest of the panel uses cannot take a badge. Measured:
+   this panel has ~238 px of content, "Cross-bridges bound" is ~120 px and
+   ILLUSTRATIVE is 87, which left the bars 10 px wide — the label ate the number
+   it was labelling. So these rows stack: the badge stays beside the name it
+   qualifies, and the bar gets the full width back.
+
+   `space-between` rather than a gap so every badge lines up on the right edge
+   and the column of words can be read straight down — which is the whole point
+   of putting a word on each row instead of one in the footer. */
+.fiber-metrics .meta--evidence {
+  display: block;
+}
+
+.fiber-metrics .meta--evidence dt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+}
+
+.fiber-metrics .meta--evidence dd {
+  margin: 0.2rem 0 0;
+}
+
+/* Bars read as a level, not as a chart. Track is the panel line colour so an
+   empty bar disappears into the panel rather than reading as zero-but-present. */
+.fiber-bar {
+  display: block;
+  width: 100%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fiber-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  /* No transition: the value already arrives smoothed from the simulation, and
+     a CSS ease on top of it would misreport how fast calcium actually falls. */
+}
+
+/* The activation ramp, matching the body scene's rest-to-peak sweep. */
+.fiber-bar__fill--load {
+  background: linear-gradient(90deg, #8c5f5a, #ff4a2b);
+}
+
+/* The system's one cool accent, used only for calcium. */
+.fiber-bar__fill--calcium {
+  background: #5b7f96;
+}
+
+/* The run behind the instant. Taller than the 5px bar it replaces, because a
+   bar only has to show one length and this has to show ten repetitions — but
+   still a row's worth of height, so the panel's rhythm does not change.
+   `fiberTrace.js` carries why it exists. */
+.fiber-trace {
+  display: block;
+  width: 100%;
+  height: 20px;
+  border-radius: 3px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.fiber-trace svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fiber-trace__line {
+  fill: none;
+  stroke: #8c5f5a;
+  stroke-width: 1.25px;
+  stroke-linejoin: round;
+}
+
+/* Same blue the calcium bar used, so the row did not change colour when it
+   changed shape. */
+.fiber-trace__line--calcium { stroke: #5b7f96; }
+
+/* The playhead is the reading. It is the one mark here that says "now", so it
+   is drawn over the line rather than under it and does not borrow the series'
+   colour — a playhead in the series' own colour reads as part of the data. */
+.fiber-trace__head {
+  stroke: var(--text);
+  stroke-width: 1px;
+  opacity: 0.55;
+}
+
+.fiber-extent {
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 1000px) {
+  .fiber {
+    grid-template-columns: 1fr;
+    /* `minmax(0, 1fr)`, not `auto`: the panel holds up to 2,787 px of content
+       and an `auto` row sizes to that, pushing itself off the bottom of a
+       definite-height grid instead of scrolling inside it. `.fiber__panel`
+       already has `overflow-y: auto` and this is what gives it something to
+       scroll in. */
+    /* 55vh left the panel at 107 px at 320x900 — the stage took the window and
+       every labelled number was behind a scrollbar 107 px tall. The stage keeps
+       a floor so it never becomes a strip, and the panel gets whatever is over. */
+    grid-template-rows: minmax(220px, 42vh) minmax(0, 1fr);
+  }
+  .fiber__panel {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  /* AND THE ROW GOES THE SAME WAY THE COLUMN DID. Under 1000 px the rule above
+     stacks the panel UNDER the stage, so deleting the sidebar left the reserved
+     space vertically instead of horizontally: measured at 390x844, the stage
+     stopped at y=356 and 400 px of blank paper stood between it and the footer,
+     roughly half the window. One track, and the stage takes the window. */
+  .fiber--stage-only {
+    grid-template-rows: minmax(0, 1fr);
+  }
+}
+
+/* THE STAGE'S OWN SENTENCE, AND IT HAD NO RULE AT ALL.
+   `stage-status` carries the §9 copy that must never be cut — "Loading the
+   coupled run…", "Waiting for the first frame…" — and it moved onto the stage
+   when the panel that used to hold it was deleted. Nothing was ever written to
+   place it, so it laid out in normal flow at the top: measured 2026-09-04 on the
+   cell, 375 px above the middle of the rectangle it is explaining. The thing it
+   is about is the whole empty stage, so it belongs in the middle of it. */
+.stage-status {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 1.5rem;
+  text-align: center;
+  pointer-events: none;
+  color: var(--muted, #6b7280);
+  font-size: 13px;
+}
+
+/* ---- THE COMPARISON: FIRST REPETITION AGAINST LAST ------------------------ *
+
+   The floor's ending, drawn. `FiberCompare.jsx` carries what it is for and why
+   it has no numbers on it; this is where it sits and how it reads.
+
+   TOP RIGHT, AND THE THREE CORNERS THAT WERE ALREADY TAKEN ARE WHY. The
+   notices own top-left (`.fiber__notices`, left 12 top 12), the subtitle owns
+   the bottom (`.fiber__spent`, and the plate solver clamps stray plates into a
+   strip along that same edge, which is what pushed the subtitle from 64 to
+   100), and the level ladder floats over the stage. Top-right is the one corner
+   with nothing in it, and it is the corner a viewer's eye is not on while the
+   sarcomere is working in the middle.
+
+   IT ONLY EXISTS DURING THE COMPARISON. `FiberCompare` returns null when
+   `compare` is null, so this is not a dashboard the scale wears — the spec is
+   explicit that the meters appear for the reveal and are hidden the rest of the
+   time ("Main mode에서는 숨겨. 그래서 final revelation에서만 data UI가 나온다").
+   A gauge that is always on stops being a reading and becomes furniture. */
+.fiber-compare {
+  position: absolute;
+  left: 16px; /* TOP-LEFT — 2026-09-07, owner (FIBER pace 3): *"rep 1 rep 10 이거 왼쪽 위로"*; on the right, Go Home covered the Rep 10 head */
+  /* UNDER THE RIDE CHROME, NOT IN IT. Screenshotted 2026-09-05 at 1440x900 with
+     `top: 12px`: the panel sat behind Pause / Bench press / Go Home, and the
+     header naming which repetition each column is — the one thing that makes
+     the pair readable — was completely covered by the Pause button. The chrome
+     stacks three deep to y = 118, so this clears it. */
+  top: 56px;
+  z-index: 3;
+  padding: 10px 12px 11px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, #faf8f5 92%, transparent);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  /* Same entrance as a tour line, so the reveal arrives as one gesture rather
+     than as a panel appearing beside a sentence. */
+  animation: tour-line 260ms ease-out both;
+}
+
+.fiber-compare__grid {
+  display: grid;
+  grid-template-columns: auto 84px 84px;
+  align-items: center;
+  gap: 5px 10px;
+}
+
+.fiber-compare__head,
+.fiber-compare__name {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.fiber-compare__head {
+  text-align: center;
+}
+
+/* THE LIT COLUMN IS THE ONE THE RUN IS PARKED ON, so the meters and the 3D are
+   the same instant. Weight and not colour: the accent on this floor means "the
+   thing you pressed" (`Handle`'s #b4530a) and spending it here would say a
+   column had been chosen by the viewer. */
+.fiber-compare__head[data-lit] {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.fiber-compare__name {
+  text-align: right;
+  color: var(--text);
+}
+
+.fiber-compare__bar {
+  height: 9px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+  overflow: hidden;
+}
+
+/* THE FILL IS SCALED, NOT WIDTHED, so the browser animates it on the compositor
+   and a bar that changes between two frozen frames does not relayout the panel
+   under the sentence being read over it. */
+.fiber-compare__fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  border-radius: inherit;
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  background: color-mix(in srgb, var(--text) 34%, transparent);
+}
+
+/* THE TWO ROWS ARE THE TWO QUANTITIES AND THEY KEEP THE COLOURS THEY HAVE.
+   Calcium is #5b7f96 everywhere in this app — the fibre draws its ions in it,
+   the energy floor draws its calcium switch in it, and that continuity is the
+   one colour contract that crosses a floor. Force has no ion to be, so it takes
+   the thick filament's own warm — the thing that does the pulling. */
+.fiber-compare__bar[data-row="calcium"] .fiber-compare__fill {
+  background: color-mix(in srgb, #5b7f96 72%, transparent);
+}
+
+.fiber-compare__bar[data-row="force"] .fiber-compare__fill {
+  background: color-mix(in srgb, #8f544c 78%, transparent);
+}
+
+/* An unlit column is still readable — the comparison is the point and half of
+   it greyed out is not a comparison. It is held back, not switched off. */
+.fiber-compare__bar:not([data-lit]) .fiber-compare__fill {
+  opacity: 0.45;
+}
+
+@media (max-width: 560px) {
+  .fiber-compare {
+    left: 8px;
+    top: 56px;
+    padding: 8px 9px 9px;
+  }
+  .fiber-compare__grid {
+    grid-template-columns: auto 58px 58px;
+    gap: 4px 7px;
+  }
+  .fiber-compare__head,
+  .fiber-compare__name {
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiber-compare {
+    animation: none;
+  }
+  .fiber-compare__fill {
+    transition: none;
+  }
+}
+
+
+
+
+
+
+
+@media (max-width: 560px) {
+  /* NARROW: the facts block goes full width at the foot and the ladder shrinks,
+     so the rail is tighter. Sitting higher keeps the strip off both. */
+}
+
+@media (prefers-reduced-motion: reduce) {
+}
+
+/* ---- WHERE THE SET IS UP TO ---------------------------------------------- *
+
+   Ten marks and one bar, shown only while FULL SET is playing.
+   `FiberModes.jsx` carries why it is repetitions and not seconds, and why the
+   force bar is here and not in the other two modes. */
+.fiber-set {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  padding: 6px 11px 7px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, #faf8f5 92%, transparent);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  animation: tour-line 220ms ease-out both;
+}
+
+.fiber-set__reps {
+  display: flex;
+  gap: 4px;
+}
+
+/* A MARK PER REPETITION, filling left to right. Ten of something countable
+   rather than a continuous track: the run IS ten repetitions, and a smooth bar
+   would say it is a duration. */
+.fiber-set__rep {
+  width: 9px;
+  height: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--text) 13%, transparent);
+}
+
+.fiber-set__rep[data-on] {
+  background: color-mix(in srgb, #8f544c 74%, transparent);
+}
+
+.fiber-set__force {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+}
+
+.fiber-set__force-label {
+  font-size: 10px;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
+}
+
+.fiber-set__bar {
+  display: block;
+  width: 96px;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--text) 9%, transparent);
+}
+
+/* NO TRANSITION. This one is live — it is the force of the pull happening right
+   now, and easing it would draw a value the run is not at. The comparison's
+   bars ease because they cut between two frozen frames; this one must not. */
+.fiber-set__fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  border-radius: inherit;
+  background: color-mix(in srgb, #8f544c 78%, transparent);
+}
+
+@media (max-width: 560px) {
+  .fiber-set__bar {
+    width: 68px;
+  }
+  .fiber-set__rep {
+    width: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiber-set {
+    animation: none;
+  }
+}
+
+/* THE SET STRIP IS A CONTROL NOW, not a readout — `fiber.md` §10. It has a
+   playhead and it takes a drag, so "everything moves on the same clock" is
+   something a visitor can check by moving it rather than a claim. */
+.fiber-set__track {
+  position: relative;
+  padding: 5px 0;
+  cursor: ew-resize;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.fiber-set__track:focus-visible {
+  outline: 2px solid color-mix(in srgb, #8f544c 70%, transparent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.fiber-set__now {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--text);
+  pointer-events: none;
+}
+
+/* THE NOTICE STACK AND THE RUN-MODE ROW LEFT THIS SHEET ON 2026-09-06.
+   `.fiber__notices` / `.fiber__notice` placed the archived-run disclosure and
+   the out-of-range banner at top-left; `.fiber-modes*` placed One pull / Full
+   set / Compare and its repetition scrubber at bottom-left. Owner: *"fiber-modes/
+   fiber__notices 아예 삭제"*, then *"그냥 아예 빼 … 내말이 canon이야"* when told
+   what the first block contained. Both components went with them
+   (`FiberModes.jsx` deleted; the notice slot removed from
+   `MuscleFiberVisualization`). Recorded here because the comments those rules
+   carried — why 12px, why the ground, why the stack — were the record of two
+   layout arguments, and losing the rules should not lose the fact that they
+   were had. */

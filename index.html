@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Interactive 3D exercise and cellular-signalling explorer built on public UCSD Human Performance Alliance research."
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#ffffff" />
+    <!-- THE PRODUCT'S NAME IS `Human Body Explorer`, settled 2026-09-05.
+         It was two names on one screen: the shell said one thing in the corner
+         and the drawer three centimetres away said the other, and the tab said
+         the drawer's. Owner, asked which: *"Human Body 로 가자"*.
+         THE REPOSITORY AND THE RESEARCH KEEP THEIRS. `human-performance-explorer/`
+         is the folder, and the meta description above credits the UCSD Human
+         Performance Alliance — that is the programme this is built on, not what
+         the thing on screen is called. Only what a visitor reads changed. -->
+    <title>Human Body Explorer</title>
+  </head>
+  <body>
+    <!--
+      SOMETHING TO PAINT BEFORE THE BUNDLE ARRIVES. Q35 R1, 2026-08-30, measured
+      with CPU throttled 4x and the network at 1.5 Mbps: first contentful paint
+      at 49.56 s, because `#root` was empty and nothing in this file could be
+      drawn until 387 KB of gzipped JavaScript had landed. Fifty seconds of
+      white is the failure this question names.
+      Inline, in this file, with no request of its own — a stylesheet or an
+      image would be one more round trip on the connection that is already the
+      problem. React replaces `#root`'s children on mount, so this disappears
+      without being told to.
+      CLAUDE.md §9: loading copy is the one class of text that may never be
+      deleted. This is that text, and its absence was the bug.
+    -->
+    <div id="root">
+      <div style="font: 14px/1.5 system-ui, sans-serif; color: #4a4640; padding: 2rem; max-width: 32rem">
+        <strong style="font-weight: 600">Human Body Explorer</strong>
+        <p style="margin: 0.5rem 0 0">Loading the body, the meshes and the archived runs…</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

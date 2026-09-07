@@ -1,0 +1,195 @@
+/**
+ * The way in. A ring in the picture; a disc of the destination beside it.
+ *
+ * The ring itself is geometry (see WayIn.jsx) — what is here is the hit target
+ * over it and the panel that opens on hover, both DOM so a keyboard can reach
+ * them and so the disc can be an image rather than a second canvas.
+ */
+.wayin {
+  position: relative;
+  pointer-events: none;
+}
+
+/* OVER THE WINDOW, AND THE SIZE OF IT. It was 44 px over a 44 px ring — the
+   smallest a finger finds without hunting. The ring is gone and the window that
+   replaced it is bigger, so the target grew with it: a control whose picture is
+   larger than its hit area teaches a visitor that pressing the picture does
+   nothing. Centred on the anchor the same way, so the geometry that places this
+   in the scene did not have to change. */
+.wayin__target {
+  position: absolute;
+  left: -46px;
+  top: -46px;
+  width: 92px;
+  height: 92px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+/* OPEN, THE CONTROL IS THE PICTURE. 176 is `.wayin__hole`'s open size and 88 is
+   half of it, so the button is exactly the disc — hovering the picture keeps the
+   pointer on the control, and pressing the picture is pressing the control. It
+   sits above the door because it is declared before it and lifted here; without
+   the lift the door would be on top by document order and swallow the press,
+   which is how the press was lost for one commit. */
+.wayin--near .wayin__target {
+  left: -88px;
+  top: -88px;
+  width: 176px;
+  height: 176px;
+  z-index: 2;
+}
+.wayin__target:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+@keyframes wayin-open {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  }
+
+/* THE WINDOW. Standing it is small enough to read as a hole in this picture
+   rather than a panel laid over it; under the pointer it opens to something
+   worth looking into. Both sizes are here and the growth is one transition, so
+   nothing in JS has to know a number.
+   THE TRANSITION IS THE AFFORDANCE. A thing that answers when you approach it is
+   a thing that can be pressed, and that is the sentence the three rings needed a
+   caption to say. */
+/* CLIPPED BY ITS OWN CLIP, so the zoom above cannot spill. */
+.wayin__door > img { display: block; }
+/* THE MAGNIFIER, STANDING. Centred on the anchor, the ink the rest of this app
+   writes in rather than a colour of its own — the orange it replaces was the
+   thing the owner objected to, and a way in does not need a hue to be found when
+   it has a shape nobody mistakes. It lifts and darkens under the pointer, which
+   is the whole of its affordance. */
+.wayin__lens {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  color: #4d5560;
+  background: rgba(250, 248, 245, 0.86);
+  box-shadow: 0 0 0 1px rgba(22, 28, 36, 0.14), 0 2px 8px rgba(22, 28, 36, 0.10);
+  transition: color 160ms ease, scale 160ms ease, box-shadow 160ms ease;
+  pointer-events: none;
+}
+.wayin--near .wayin__lens {
+  color: #161c24;
+  scale: 1.08;
+  box-shadow: 0 0 0 1px rgba(22, 28, 36, 0.24), 0 4px 14px rgba(22, 28, 36, 0.16);
+}
+/* The view opens BESIDE the magnifier, not on top of it: the icon stays put so
+   the thing a visitor aimed at is still under their pointer. */
+.wayin__door {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  overflow: visible;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  /* AND IT DOES NOT TAKE THE POINTER — 2026-09-06, the second cut. The first
+     gave the door `pointer-events: auto` so that moving onto the picture would
+     not fire the wrapper's leave, and that worked and broke the press: the door
+     is 176 px over a 92 px button, drawn after it, so every click landed on the
+     picture and the way down stopped working. Owner, within the hour:
+     *"#bench_press/fiber 에서는 버튼이 안눌려"*.
+     THE BUTTON GROWS INSTEAD. `.wayin--near .wayin__target` below covers the
+     whole disc, so the pointer never leaves the control while it is over the
+     picture AND the picture is what you press. One element does both jobs, which
+     is what it should have been: a control you can see into. */
+  pointer-events: none;
+}
+.wayin__name {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4d5560;
+  white-space: nowrap;
+  opacity: 0.72;
+  transition: opacity 180ms ease;
+}
+.wayin--near .wayin__name { opacity: 1; }
+
+.wayin__hole {
+  display: block;
+  width: 168px;
+  height: 168px;
+  border-radius: 999px;
+  overflow: hidden;
+  /* A hole in the paper has an inside edge, not a border: one hairline of the
+     stage's own ink, and a shadow that deepens as it opens so the window reads
+     as going INTO the picture rather than sitting on it. */
+  box-shadow: 0 0 0 1px rgba(22, 28, 36, 0.16), 0 2px 10px rgba(22, 28, 36, 0.10);
+  transition: width 220ms ease, height 220ms ease, box-shadow 220ms ease;
+}
+.wayin--near .wayin__hole {
+  width: 176px;
+  height: 176px;
+  box-shadow: 0 0 0 1px rgba(22, 28, 36, 0.22), 0 10px 30px rgba(22, 28, 36, 0.20);
+}
+
+/* ZOOMED INTO THE MIDDLE, AND THAT IS NOT A CROP FOR LOOKS. Seen at 88 px the
+   first cut was a pale blank coin, because these destinations are mostly the
+   app's own paper — the cell draws eight molecules inside a membrane and the
+   rest is background. A window that small onto a picture that empty shows
+   nothing, which is exactly the failure the three rings had. 170 % puts the
+   subject across the whole window at both sizes. */
+.wayin__disc {
+  display: block;
+  /* FILLS THE HOLE, NO MORE. It was 170 % with a negative margin, which was the
+     right idea against a preview that framed a whole stage — and the wrong one
+     the moment `previewLevel` started pulling its own camera in. Two zooms
+     stacked put the coin inside one molecule. The camera does the framing now,
+     because that is the honest place for it: same direction, same lens as the
+     destination, only nearer. This just fills the circle. */
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--bg);
+}
+@media (max-width: 420px) {
+  .wayin__disc { width: 104px; height: 104px; }
+}
+
+/* `.wayin__hint` DELETED 2026-08-31, hours after it was added. It hung a
+   caller's sentence under the ring, with a JS clamp to keep it on a 320 px
+   screen. The owner settled what a touchable scale shows — the animation, and
+   no prose — so the sentence went rather than moving, and this went with it.
+   Flagged, grepped (no `wayin__hint` in `src` or `tests`), removed, grepped
+   again. */
+
+/* THE ACTION, UNDER THE PICTURE OF WHERE IT GOES — 2026-09-06.
+   Owner: *"mini 3d (go inside)밑에 go inside text(항상 잘보이게 색깔을 잘
+   선택해서)"*. "Always legible" is the requirement, and a colour cannot meet it
+   on its own: the disc above is a live render that brightens and darkens as the
+   fibre contracts, so ink chosen against one frame of it fails on another. An
+   opaque plate is legible against anything, which is why this has a background
+   at all rather than only a colour. */
+.wayin__go {
+  display: block;
+  margin: 6px auto 0;
+  padding: 3px 9px;
+  width: fit-content;
+  border-radius: 999px;
+  background: #161c24;
+  color: #f7f8fa;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(16, 20, 28, 0.28);
+}

@@ -1,0 +1,173 @@
+/**
+ * A SCALE'S STANDING WORDS — the headline, the measured facts, and the run axis.
+ *
+ * §9's default is empty and stays empty everywhere else in this app. These three
+ * blocks are the exception the owner named and specified on 2026-08-31, first
+ * for the signalling scale and then for the cell: a headline over the picture,
+ * a small strong block of what was measured, and a bar saying where in the run
+ * the drawing is.
+ *
+ * SHARED BECAUSE TWO SCALES DRAW THEM. They started in `signalling.css`, which
+ * only `SignallingScale.jsx` imports — so when the cell took a headline it
+ * rendered unstyled, at the top-left of the stage in the browser's own default
+ * type. A sheet one scale imports is a rule the other does not get, silently.
+ *
+ * ON THE PICTURE, NOT IN A BAR. The header came off these scales in August —
+ * Rex, *"시간이나 위에 header이런건 그냥 빼야되고"* — and a bar is what comes back
+ * if these are laid out in flow. They sit over the canvas on their own ground
+ * and the canvas keeps the whole grid.
+ */
+
+.scale-head {
+  position: absolute;
+  top: 4.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(46rem, calc(100% - 3rem));
+  text-align: center;
+  pointer-events: none;
+  z-index: 3;
+}
+.scale-head__line {
+  margin: 0;
+  font-size: clamp(0.95rem, 1.55vw, 1.22rem);
+  line-height: 1.32;
+  font-weight: 620;
+  letter-spacing: -0.008em;
+  color: #161c24;
+  /* A HALO, NOT A PLATE. The sentence stands over a drawing that is pale in
+     places and dark in others, and a box here would be the pill the owner threw
+     out of the body scale. Five offsets of the stage's own paper give the type
+     an edge against anything without drawing an edge. */
+  text-shadow:
+    0 1px 0 #faf8f5, 0 -1px 0 #faf8f5, 1px 0 0 #faf8f5, -1px 0 0 #faf8f5,
+    0 0 6px #faf8f5;
+}
+.scale-head__sub {
+  margin: 0.34rem 0 0;
+  font-size: clamp(0.72rem, 1vw, 0.83rem);
+  line-height: 1.45;
+  color: #4d5560;
+  text-shadow: 0 1px 0 #faf8f5, 0 -1px 0 #faf8f5, 1px 0 0 #faf8f5, -1px 0 0 #faf8f5;
+}
+
+/* SMALL BUT STRONG, IN THE CORNER THE DRAWING DOES NOT USE. The network fills
+   the middle and both upper corners carry chrome, so the foot-left is the one
+   place a standing block can sit at every width without a solver. */
+.scale-facts {
+  position: absolute;
+  left: 1.1rem;
+  bottom: 3.6rem;
+  max-width: 15rem;
+  pointer-events: none;
+  z-index: 3;
+}
+.scale-facts p {
+  margin: 0 0 0.3rem;
+  font-size: 0.68rem;
+  line-height: 1.5;
+  color: #636c7b;
+  text-shadow: 0 1px 0 #faf8f5, 0 -1px 0 #faf8f5, 1px 0 0 #faf8f5, -1px 0 0 #faf8f5;
+}
+.scale-facts b {
+  color: #161c24;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.scale-facts__check { border-top: 1px solid rgba(138, 131, 120, 0.4); padding-top: 0.3rem; }
+
+/* THE RUN, ALONG THE FOOT. Not a scrubber — canon D3 took the transport off this
+   scale and this puts nothing back that a viewer operates. It says where in the
+   forty-five minutes the picture is, which is the one thing about the clock a
+   viewer cannot read off the drawing. */
+.scale-time {
+  position: absolute;
+  /* Centred in the stage LESS the question box's footprint — see `--ask-reserve`
+     in styles.css, and the same bargain the body's rep timeline pays. */
+  left: calc(50% - var(--ask-reserve) / 2);
+  bottom: 1.1rem;
+  transform: translateX(-50%);
+  width: min(30rem, calc(100% - 12rem));
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "before bar" "before marks";
+  column-gap: 0.6rem;
+  align-items: center;
+  pointer-events: none;
+  z-index: 3;
+}
+.scale-time__before {
+  grid-area: before;
+  align-self: center;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  /* NOT `#8a8378`, which measured 3.53:1 on this paper and the contrast gate
+     stopped. `#636c7b` is the value the body scale's name plate was measured
+     at on the same ground: 5.00:1, over AA for text this small. */
+  color: #636c7b;
+  text-shadow: 0 1px 0 #faf8f5, 0 -1px 0 #faf8f5;
+}
+.scale-time__bar {
+  grid-area: bar;
+  position: relative;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(138, 131, 120, 0.42);
+}
+  /* NO ORANGE ANYWHERE — 2026-09-06, the owner's last word on it: *"오렌지 빼"*.
+     `#b4530a` was the app's focus accent and it went from the press rings, the
+     focused plate, the part name and the descent's warm band earlier tonight;
+     these two playheads were what I kept, on the argument that a moving mark on
+     a timeline is not an accent on a part. The owner did not draw that line, so
+     it is not a line.
+     INK AT HALF STRENGTH, which is the reading `.energy-clock__now` already
+     ships and gives its own reason for: a playhead in a series' own colour reads
+     as part of the data. Now all three strips say it the same way. */
+.scale-time__now {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--text);
+  opacity: 0.55;
+  transform: translateX(-1px);
+}
+.scale-time__marks {
+  grid-area: marks;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.28rem;
+  font-size: 0.62rem;
+  /* NOT `#8a8378`, which measured 3.53:1 on this paper and the contrast gate
+     stopped. `#636c7b` is the value the body scale's name plate was measured
+     at on the same ground: 5.00:1, over AA for text this small. */
+  color: #636c7b;
+  text-shadow: 0 1px 0 #faf8f5, 0 -1px 0 #faf8f5;
+}
+.scale-time__marks span:nth-child(2) { letter-spacing: 0.06em; text-transform: uppercase; }
+
+@media (max-width: 640px) {
+  .scale-head { top: 3.8rem; }
+  .scale-facts { bottom: 4.2rem; max-width: 11rem; }
+  .scale-time { width: calc(100% - 2.2rem); }
+}
+
+/* THE FIBRE'S FOOT-LEFT IS NOT FREE, WHICH THE CORNER RULE ABOVE ASSUMES.
+   `.scale-facts` sits there because on the cell and the signalling "the network
+   fills the middle and both upper corners carry chrome, so the foot-left is the
+   one place a standing block can sit at every width without a solver". The fibre
+   is a different drawing: its terminal-cisterna plate stands in that corner, and
+   at 320 px the two collide — measured 2026-09-05, 1389 px² of "It still never
+   runs empty …" over "Terminal cisterna · the store", reported by
+   `gate-legibility` at 227 and again at 309.
+   FOLDED RATHER THAN MOVED, and only on this scale. Every other corner of a
+   320 px fibre stage is spoken for too, so moving it trades one collision for
+   another; and the block is a STANDING finding, which is the first thing a
+   phone should give up — the character still says the same thing on arrival,
+   and `gate-legibility`'s "every scale says at least one thing on the picture"
+   runs at 1440, where the block stands. */
+@media (max-width: 420px) {
+  [data-testid="fiber-facts"] { display: none; }
+}

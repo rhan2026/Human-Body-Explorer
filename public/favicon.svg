@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Human Performance Explorer">
+  <defs>
+    <!-- Overlaps are baked with clipPath rather than mix-blend-mode. Blend modes
+         are ignored by some icon rasterizers, which silently collapses the mark
+         into plain stacked shapes with no intersections at all. -->
+    <clipPath id="hpe-circle"><circle cx="11.6" cy="11.4" r="8.2" /></clipPath>
+    <clipPath id="hpe-triangle"><path d="M22.0 4.6 L29.4 18.4 H14.6 Z" /></clipPath>
+  </defs>
+
+  <rect width="32" height="32" rx="7" fill="#ffffff" />
+
+  <!-- Circle, triangle and rounded square in the viewport's muscle-group
+       palette: shoulders, chest, forearms. Sized to stay legible at 16px, where
+       anything smaller than roughly a third of the tile disappears. -->
+  <circle cx="11.6" cy="11.4" r="8.2" fill="#e8a95c" />
+
+  <path d="M22.0 4.6 L29.4 18.4 H14.6 Z" fill="#e8776b" />
+  <g clip-path="url(#hpe-circle)">
+    <path d="M22.0 4.6 L29.4 18.4 H14.6 Z" fill="#cf7042" />
+  </g>
+
+  <rect x="8.4" y="14.2" width="15.6" height="14.2" rx="4.6" fill="#8b74d4" />
+  <g clip-path="url(#hpe-circle)">
+    <rect x="8.4" y="14.2" width="15.6" height="14.2" rx="4.6" fill="#9b5580" />
+  </g>
+  <g clip-path="url(#hpe-triangle)">
+    <rect x="8.4" y="14.2" width="15.6" height="14.2" rx="4.6" fill="#8f4a73" />
+  </g>
+</svg>

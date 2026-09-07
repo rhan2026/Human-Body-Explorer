@@ -1,0 +1,241 @@
+/* The Evidence Trace — md "Evidence visual language는 공통으로".
+   Line 1.5–2 px. Type one step under the UI's secondary 12 px. Colour is the
+   3D's own semantic colour per floor, set by the tone modifiers below. No
+   background, no border, no box: the block is paper, and the only ground is
+   a faint local gradient so a line stays readable over a busy picture. */
+
+.trace {
+  position: absolute;
+  z-index: 3;
+  width: 240px;
+  margin: 0;
+  padding: 6px 8px 4px;
+  color: #403c36;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 320ms ease, left 480ms ease, right 480ms ease, top 480ms ease, bottom 480ms ease;
+  /* md: "필요하면 readability 때문에 아주 약한 paper background 70% opacity
+     정도만 line 뒤에 local blur/gradient" — a soft radial, not a card. */
+  background: radial-gradient(ellipse at center, rgba(250, 248, 245, 0.7) 40%, rgba(250, 248, 245, 0) 75%);
+}
+.trace--in { opacity: 1; }
+
+.trace__row { margin: 0 0 4px; }
+.trace__label {
+  margin: 0 0 1px;
+  text-transform: uppercase;
+  opacity: 0.72;
+}
+.trace__plot {
+  display: block;
+  width: 100%;
+  height: 44px; /* 34 until 2026-09-07 — AMPK's slow ramp read as nothing at 34 */
+  overflow: visible;
+}
+.trace__plot--seeks {
+  pointer-events: auto;
+  cursor: ew-resize;
+}
+.trace__line {
+  fill: none;
+  stroke-width: 1.75px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.trace__line--ghost {
+  stroke-width: 1px;
+  opacity: 0.38;
+}
+.trace__cursor {
+  stroke: #403c36;
+  stroke-width: 1px;
+  opacity: 0.55;
+  vector-effect: non-scaling-stroke;
+}
+
+/* THE 3D'S SEMANTIC COLOURS, and no others. FIBER's calcium and force are
+   `fiber.css`'s trace pair; ENERGY's AMPK is the molecule's own lit purple and
+   the calcium path is the calcium blue; SIGNALS' arms are `cell.css`'s tokens. */
+.trace__line--ink { stroke: #403c36; }
+.trace__line--calcium { stroke: #5b7f96; }
+.trace__line--force { stroke: #8c5f5a; }
+.trace__line--ampk { stroke: #9a6f95; }
+.trace__line--calcium-path { stroke: #5b7f96; }
+.trace__line--resistance { stroke: var(--arm-resistance, #8f544c); }
+.trace__line--endurance { stroke: var(--arm-endurance, #517286); }
+
+/* Numbers: at most two in the normal experience (md rule 2). They fade in;
+   they are never the first thing on the block. */
+.trace__nums {
+  margin: 2px 0 4px;
+  display: grid;
+  gap: 1px;
+  animation: trace-num-in 400ms ease both;
+}
+.trace__nums-title {
+  text-transform: uppercase;
+  opacity: 0.6;
+  margin: 0 0 1px;
+}
+.trace__num {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+.trace__num dt { opacity: 0.78; }
+.trace__num dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+@keyframes trace-num-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.trace__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 2px 0 0;
+}
+
+/* "○ model result": a tiny dot that unfolds the numbers around the trace.
+   Hidden until the line has reached its peak — the number is the result of
+   the animation, not a caption ahead of it. */
+.trace__dot {
+  pointer-events: auto;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: #6f6a63;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 400ms ease, color 160ms ease;
+}
+.trace__dot--ready { opacity: 1; }
+.trace__dot:hover,
+.trace__dot[aria-pressed="true"] { color: #403c36; }
+.trace__dot:focus-visible { outline: 2px solid var(--accent, #2f6fd0); outline-offset: 2px; }
+
+/* THE SOURCE — md "Source 표현": 10–11 px, grey, no underline, darker on
+   hover, and one line. Shared by the floating trace and SIGNALS' pick panel. */
+.source {
+  pointer-events: auto;
+  margin-left: auto;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: #6f6a63;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.source:hover,
+.source:focus-visible { color: #403c36; }
+.source:focus-visible { outline: 2px solid var(--accent, #2f6fd0); outline-offset: 2px; }
+.source__holder {
+  position: relative;
+  margin-left: auto;
+  pointer-events: auto;
+}
+/* The tiny popover, SIGNALS only — model validation, then the door. */
+.source__pop {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px); /* upward — the box is bottom-left since 2026-09-07 and a downward popover left the viewport */
+  z-index: 4;
+  display: grid;
+  gap: 3px;
+  min-width: 150px;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(64, 60, 54, 0.16);
+  background: rgba(250, 248, 245, 0.96);
+  backdrop-filter: blur(3px);
+  font-size: 10.5px;
+  color: #403c36;
+  white-space: nowrap;
+}
+.source__pop-title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 9.5px;
+  opacity: 0.6;
+}
+.source__pop-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.source__pop a {
+  margin-top: 2px;
+  color: #6f6a63;
+  text-decoration: none;
+}
+.source__pop a:hover { color: #403c36; }
+
+/* ---- anchor zones, per floor (md "Evidence가 3D를 가리지 않게") ------------ */
+/* FIBER: bottom-left. The md's example was "left-upper open space", and
+   measured at 1280x800 that space is not open: the level ladder stands at
+   left 16 / top 56 down to y≈190, and the sarcomere's left ring begins at
+   y≈285, so a two-trace block (128 px) cannot stand between them without
+   covering one or the other (still `20260907-evidence-fiber-1-main.png`, first
+   cut, foot row across the ring). The bottom-left quarter is empty on this
+   floor — the guide's home is bottom-right and the pass's subtitle only stands
+   while a pass runs — so the block goes there. */
+.trace--fiber { left: 16px; bottom: 16px; }
+/* ENERGY: bottom-left, above the condition controls — AMPK stands right of
+   centre in the room's wide framing, so this is the side it is not on. */
+.trace--energy-left { left: 16px; bottom: 16px; } /* 118 cleared the Condition plate, which is top-left since 2026-09-07 */
+/* THE OTHER SIDE — `EvidenceTrace` adds `trace--flip` when the camera brings
+   the subject onto the block (its `avoidRef`), and the `left` transition on
+   `.trace` carries it across. `left`, on both sides, on purpose: `left: auto`
+   is not a value a transition can run between, so a `right:` mirror would
+   snap. Bottom-right is the guide's home corner on both floors; the guide
+   already keeps off `[data-guide-clear]`. */
+.trace--fiber.trace--flip,
+.trace--energy-left.trace--flip { left: calc(100% - 256px); }
+/* SIGNALS: the constellation's two numbers, in the corner the fact lines left. */
+.trace--signals-net { left: 16px; bottom: 16px; width: auto; }
+
+@media (max-width: 700px) {
+  .trace { width: 200px; }
+  .trace--fiber.trace--flip,
+  .trace--energy-left.trace--flip { left: calc(100% - 216px); }
+}
+
+/* ONE BOX ON EVERY FLOOR — 2026-09-07, owner: *"나머지 애들도 signalling처럼 저런 박스안에 …
+   최대한 사이즈는 통일"*. The fibre's and ENERGY's blocks take SIGNALS's pick-box plate,
+   220 wide; heights differ only by how many plots a floor has. */
+.trace--fiber,
+.trace--energy-left {
+  width: 220px;
+  box-sizing: border-box;
+  padding: 8px 11px 9px;
+  border-radius: 10px;
+  border: 1px solid rgba(64, 60, 54, 0.18);
+  background: rgba(250, 248, 245, 0.92);
+  backdrop-filter: blur(4px);
+}
+.trace__mark {
+  float: right;
+  font-variant-numeric: tabular-nums;
+  color: #6f6a63;
+  letter-spacing: 0;
+  text-transform: none;
+}

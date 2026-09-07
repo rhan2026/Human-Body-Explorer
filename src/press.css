@@ -1,0 +1,481 @@
+/* Push-up scene. Deliberately separate from the explorer's three-column shell:
+   this view is one full-bleed stage and nothing else. */
+.press {
+  /* Normal flow, like `.app` — html/body/#root already carry height: 100%.
+     This was `position: fixed; inset: 0`, and a fixed scene root is a
+     backdrop root in Chromium: it flattens to one paint unit, so the shared
+     scrim outside could not slide between this scene's stage (blur it) and
+     this scene's drawer (leave it crisp) — the whole scene blurred as one,
+     drawer and trigger included. */
+  position: relative;
+  height: 100%;
+  display: grid;
+  /* `minmax(0, 1fr)`, not the implicit `auto`. An auto grid column takes its
+     minimum from the widest item's min-content, so at 320 px the top bar laid
+     itself out 541 wide and pushed the `↓ Fiber` chip to x=467 — outside the
+     window, with no `overflow-x` anywhere to scroll it back. Nothing in this
+     app has a Ctrl+D on a phone, so that chip being off screen means the
+     descent has no entrance at all. */
+  grid-template-columns: minmax(0, 1fr);
+  /* One row: the stage is the page. The bar and foot this held are the shared
+     drawer and the floating viewbar now — an `auto 1fr auto` template with a
+     single child would land it on the first `auto` row, which has no height,
+     the exact collapse styles.css's media-query scar documents. */
+  grid-template-rows: 1fr;
+  background: #faf8f5;
+  color: #1c1a18;
+  font: 400 13px/1.4 ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.press__stage {
+  position: relative;
+  min-height: 0;
+}
+.press__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* A PRESS HERE PICKS A MUSCLE, so the pointer says so. Lost in `ac2c83d`,
+     which brought Rex's shell in and dropped `.press canvas { cursor: pointer }`
+     with the old class name; `fiber/fiber.css:244` still cites the body's canvas
+     as the example the deep scales were made to match, so the three of them kept
+     saying `grab` while the one they copied said nothing. Restored 2026-09-04
+     against `gate-first-time-walk` and `gate-legibility`, which both name it. */
+  cursor: pointer;
+}
+
+.press__controls {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
+}
+.press__sep {
+  width: 1px;
+  height: 18px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 3px;
+}
+
+/* The rail lives in the shared drawer now, drawn as the explorer's exercise
+   rows (`.exlist__row`); `.press__rail` and `.press__railitem` survive only as
+   hooks — the cinematic recede rule and motion-ui.spec.js address them. */
+.press__railname {
+  flex: 1 1 auto;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.exlist__row--on .press__railname { font-weight: 600; }
+
+/**
+ * Narrow viewports: the control dock is centred with `left: 50%` and a
+ * translate, which does nothing to stop it being wider than the screen. At
+ * 390 px it hung 61 px off the left edge with the play button unreachable.
+ * Pinning both sides and letting it wrap is what actually constrains it.
+ */
+@media (max-width: 700px) {
+  .press__controls {
+    left: 8px;
+    right: 8px;
+    bottom: 12px;
+    transform: none;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px;
+  }
+  .press__sep { display: none; }
+}
+
+/* The narrow/short breakpoint held only the legend's own reflow; the block is
+   empty now that the legend is gone, so it goes with it rather than sitting
+   here as a hook nothing hangs on. */
+
+@media (prefers-color-scheme: dark) {
+  .press {
+    background: #17161a;
+    color: #ece8e3;
+  }
+  .press__controls {
+    background: rgba(32, 30, 35, 0.86);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .press__sep { background: rgba(255, 255, 255, 0.14); }
+}
+
+/* The ⌘D inspect overlay was deleted 2026-09-05 under §18 — see MotionScene.
+   Its rules went with it. `styles.css` still carries a `.press__inspect` block
+   for the shared cinematic recede; that file is not this floor's and the rules
+   are inert with no markup to match. */
+
+/* ── THE MUSCLE'S NAME PLATE, brought back with the merge, 2026-08-31 ────────
+   Rex's press.css was cut before B8 and carries no `.press__name`. The
+   component is back on his MotionScene (driven by the pick rather than by a
+   hover), so its rule comes with it; `pressChrome.test.js` reads this block by
+   name and says what each value is holding. */
+.press__name {
+  /* It stands ON the anchor rather than straddling it. drei's `<Html center>`
+     puts the wrapper's CENTRE on the projected point, which would leave the
+     bottom half of the plate inside the muscle's top; shifted up by its own
+     height, the plate's bottom edge sits exactly on the anchor — and the anchor
+     is already the muscle's half-height plus `NAME_CLEAR` above its centre.
+     ON THIS ELEMENT AND NOT ON THE `<Html>`: drei writes its own `transform` on
+     the element carrying the component's `className`/`style`, so a transform
+     declared there is overwritten every frame. This is the child of that. */
+  transform: translateY(-50%);
+  position: relative;
+  width: max-content;
+  /* A long Latin name wraps rather than running off the drawing. */
+  max-width: 15rem;
+  /* It is over the body, it is not a control, and a plate that swallows a
+     pointer move would make the name flicker as the pointer re-entered its own
+     box — and would eat the orbit drag that starts under it. */
+  pointer-events: none;
+  /* REDRAWN 2026-09-06. Owner, walking it: *"hover했을때 뜨는 muscle tag
+     디자인적으로 개선"*. It was a square of paper with a hard rule under it —
+     the shape of a debug label, and the only thing in this app that looked like
+     one. Everything else a visitor points at is a rounded surface with a hairline
+     and a soft shadow: `.ways__go`, `.press__card`, `.shell-pick`. This joins
+     them, so a plate on a muscle reads as the same family as the card in the
+     corner it will open. */
+  padding: 6px 10px 7px;
+  /* THE SCENE'S OWN PAPER, NOT WHITE — and the first cut of this redraw got it
+     wrong. `rgba(255,255,255,0.95)` on a `#faf8f5` stage is a second material:
+     a white card laid on warm paper, which is the exact thing the flat version
+     was built to avoid and `pressChrome.test.js` was built to catch. The shape
+     changed at the owner's ask; the ground was never part of that ask. */
+  background: color-mix(in srgb, #faf8f5 95%, transparent);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  box-shadow: 0 4px 14px rgba(22, 28, 36, 0.13);
+  color: var(--text);
+  text-align: left;
+}
+
+/* The tick: the footing drops to the muscle. See ③ above for the 7px. */
+.press__name::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 7px;
+  /* The leader belongs to the plate, so it takes the plate's own line rather
+     than the darker rule the flat version needed to be seen at all. */
+  background: var(--line);
+}
+
+.press__name strong {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* The role is a classification, so it is set as one — `gizmo__name`'s exact
+   treatment. It reads "PRIMARY IN BENCH PRESS": uppercase makes the preposition
+   quiet enough that the two words that matter carry it, which is why this can be
+   a label rather than the sentence it used to be set as. */
+/* THE ROLE IS A CHIP, BECAUSE IT IS THE ONE THING LEFT SAYING IT — 2026-09-06.
+   The corner legend went at the owner's word, so this line is now the only place
+   a visitor learns what part a muscle plays, and a second line of small grey
+   type is not where a reader looks first. A filled chip is.
+   NEUTRAL, AND THAT IS NOT A DESIGN PREFERENCE. This floor spends its whole
+   narration teaching that COLOUR means muscle group and BRIGHTNESS means role;
+   a chip tinted by role would teach the opposite in the one place the role is
+   named. One ink for all three — the word carries the difference. */
+.press__name-role {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 7px 3px;
+  border-radius: 999px;
+  background: #eceff3;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: #4a5260;
+}
+
+/* AFTER the base rule, NOT beside the column's other narrow overrides, and the
+   position is the whole point: a media query adds no specificity, so an
+   identical selector declared LATER in the file wins regardless of the query.
+   This override lived above `.press__name` for one build and did nothing —
+   `getComputedStyle` reported the 240px it was meant to replace. Measured, not
+   reasoned; the file order IS the cascade here. */
+/* NARROWER ON A PHONE, WHICH IS INSURANCE AND NOT TIDYING. The plate is
+   centred on its muscle and has no clamp — `gizmo.css` gets one from its layout
+   solver and this has no solver, by design, because one plate cannot collide
+   with itself. What it CAN do is run off an edge: at 320 px a 240 px plate needs
+   its muscle's projected centre to be more than 120 px from either side, and
+   the body does not always oblige (a lunge's trailing arm, a swimmer's hand).
+   176 px halves the exposure and costs one wrapped line on the longest names.
+   420 px is `gizmo.css`'s own breakpoint for the same trade, so this is the
+   house's number rather than a new one.
+   ponytail: still not a clamp. If a measured exercise puts a plate off the edge
+   at 320, the fix is to nudge it back inside from `HoverName` — the same six
+   lines the way-in's sentence used before that sentence was deleted. */
+@media (max-width: 420px) {
+  .press__name { max-width: 11rem; }
+}
+/* THE BRACE ABOVE WAS MISSING, 2026-09-02, AND IT COST THE WHOLE REST OF THIS
+   FILE. Counted: 39 opening braces against 38 closing. Everything written after
+   this point — `.press__beat`, its arc, its word, `.press__rail`, all of it —
+   was swallowed into a `max-width: 420px` query and therefore DEAD at every
+   width the app is actually used at.
+   WHAT THAT LOOKED LIKE, measured in the browser at 1201x678: `.press__beat`
+   never got `display: flex`, so it laid out as a static block BELOW the stage
+   instead of inside it; its `<svg viewBox="0 0 36 36">` never got its
+   `1.6rem` box, so it took the full column width and, being square, 1201 px of
+   height. The document came out 1901 px tall in a 678 px window — 1223 px of
+   scroll nobody asked for. One wheel notch and the bench press slides up out of
+   frame, which is exactly what the owner reported and blamed on the guide.
+   THE GUIDE WAS NOT INVOLVED. Checked both ways: with the character on screen
+   and with it suppressed, the bench and the ground grid land on identical
+   pixels. My first reading was that the camera differed and it was wrong — what
+   differed was the barbell's phase and the bubble's own ink. The character only
+   ever made someone touch the page, and touching a page that scrolls scrolls
+   it. */
+
+/* ── WHERE THE REPETITION IS ──────────────────────────────────────────────────
+   below is what replaced them. The arc answered "how far through" with a ring
+   and a sentence answered "which phase"; neither said what the SHAPE of the
+   movement is, which is the thing a timeline can show and a ring cannot.
+
+   Kept from the old note, because it is still the reason there is no colour in
+   any of this: `.press__phase` and `.press__dot` before it carried three tints
+   against eighteen phase names across six movements, so eleven fell through to
+   grey and running and swimming were grey for all six of theirs. A colour key
+   that cannot cover its own vocabulary tells a reader that unlike things are
+   alike. The timeline names every phase in words for the same reason. */
+
+/* ── THE SELECTION CARD ──────────────────────────────────────────────────────
+   What the visitor picked, what part it plays in this movement, and the way
+   into it. Bottom-right: the transport pill is bottom-centre and the view
+   sliders are bottom-left, so this is the corner that is free at every width
+   the stage draws at.
+
+   It is a card and not a panel on purpose. The anatomy is the thing being
+   looked at; this is a caption for it, so it takes the smallest rectangle that
+   holds three short lines and a control, and never grows with the content —
+   `roleSentence` is a template precisely so this box has a known height. */
+.press__card {
+  position: absolute;
+  right: 20px;
+  /* CLEAR OF THE GUIDE'S HOME CORNER. `Guide.jsx` parks the hushed character at
+     the stage's bottom-right (`width - 96, height - 26`), which is inside this
+     box at `bottom: 20px` — measured on the running shot, the character was
+     sitting on top of the card's own text. The guide is shared by four floors,
+     so the card moves rather than its corner. */
+  bottom: 132px;
+  width: 232px;
+  padding: 13px 14px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
+}
+.press__card-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+/* The classification line, held quiet — it is the answer to a question the
+   picture already gave, so it confirms rather than announces. */
+.press__card-role {
+  margin: 3px 0 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.press__card-says {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+/* THE ONE CONTROL ON THE CARD, and it is the floor's exit. Full width so it
+   cannot be mistaken for a label, and separated by a rule rather than by air so
+   the card still reads as one object. */
+
+@media (max-width: 700px) {
+  /* Under `<Ways>` here too — it keeps its corner at every width. */
+  .press__view { top: 96px; right: 8px; }
+
+  /* The transport pill pins itself to both edges below 700 and sits at
+     bottom: 12px, so the card stands above it rather than under it. */
+  /* The card goes full width here and the timeline sits at 96px, so the card
+     has to clear both it and the transport pill under it. Measured at 390 and
+     320: at 132px the card's foot landed inside the timeline's phase words. */
+  .press__card {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    bottom: 168px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .press__card {
+    background: rgba(32, 30, 35, 0.9);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+}
+
+/* ── THE ROLE KEY ────────────────────────────────────────────────────────────
+   Bottom-left, small, and deliberately monochrome. Three coloured swatches
+   would say "colour means role", which is the misreading the whole floor is
+   built to prevent — so the ladder is one ink at the three role weights, which
+   is the channel the anatomy actually uses, and the note says what hue is for.
+   Appears on the beat that states the rule and stays after the walk ends. */
+/* The ladder itself. `ROLE_OPACITY` sets each dot's alpha inline, from the same
+   constant the meshes are drawn from — so the key cannot drift away from the
+   picture it is a key to. */
+
+@media (prefers-color-scheme: dark) {
+  .press__resume {
+    background: rgba(32, 30, 35, 0.9);
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+}
+
+/* ── THE VIEW CONTROL ────────────────────────────────────────────────────────
+   The layer sliders and the orientation cube used to live on the stage
+   permanently, in the two corners the exhibit needs — bottom-left for the role
+   key, top-right for nothing at all, which is the point. Both are useful and
+   neither is the subject, so they fold behind one button along with the camera
+   reset. Top-right, small, and quiet until it is open. */
+.press__view {
+  position: absolute;
+  right: 20px;
+  /* UNDER `<Ways>`, which owns the top-right corner (`styles.css .ways`, top 16
+     right 16) on all four floors. This used to sit in that exact spot because
+     the body was the one floor not mounting it. */
+  top: 104px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.press__view-toggle {
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.press__view-toggle:hover,
+.press__view-toggle:focus-visible { background: #fff; border-color: rgba(0, 0, 0, 0.22); }
+.press__view-toggle[aria-expanded="true"] { background: #fff; border-color: rgba(0, 0, 0, 0.22); }
+
+.press__view-panel {
+  width: 210px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
+}
+/* The dock is shared with the front door, so it is re-placed rather than
+   restyled: inside this panel it is a plain block, not a floating corner. */
+.press__view-panel .opacity-dock {
+  position: static;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.press__view-reset {
+  margin-top: 12px;
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.03);
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.press__view-reset:hover,
+.press__view-reset:focus-visible { background: rgba(0, 0, 0, 0.07); }
+
+@media (prefers-color-scheme: dark) {
+  .press__view-toggle,
+  .press__view-panel {
+    background: rgba(32, 30, 35, 0.9);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .press__view-reset {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* ── THE TIMELINE ────────────────────────────────────────────────────────────
+   Bottom-centre, above the transport pill, in the space the phase arc used to
+   hold. The arc said "how far through" and a sentence said "which phase";
+   neither said what the SHAPE of the movement is — that a rep is a lower and a
+   press, that a stride is contact, push, flight, and that it comes round again.
+   Positions come straight from `motion.phases`, so each movement draws its own
+   structure rather than being described by one. */
+
+
+
+/* The track. A hairline, because the thing worth seeing is where the playhead
+   is against the phase marks, not the bar itself. */
+
+
+/* THE PHASE IS A BAR, NOT A TICK — owner, 2026-09-06: *"3개를 더 extend 해서"*.
+   This was 1px, so every segment drew a divider and the strip read as a row of
+   marks with words hanging off them: nothing said how long a phase lasts, which
+   is the one thing a phase strip is for. Filling the segment's own width makes
+   the widths the reading — `Flight` is visibly the short one — and it is why
+   `MotionScene` now gives each segment a width instead of only a `left`.
+   A HAIRLINE OF SPACE BETWEEN THEM, so three bars read as three and not as one
+   long rule: `border-right` rather than a margin, which would move the words. */
+
+
+@media (prefers-color-scheme: dark) {
+}
+
+/* §13 — the key folds once it has been taught. A permanent three-row block in
+   the corner is a reference card on a screen whose subject is a body; the
+   folded form is a word and a mark, and it opens on a press for anyone who
+   wants the ladder back. */
+.press__legend-toggle:hover,
+
+/* THE ROLE KEY'S RULES LEFT WITH THE KEY — 2026-09-06. `.press__legend*` styled a
+   three-row block in the corner of the body scale saying which weight meant
+   which job. `fbeb046` took the markup off the stage while working the owner's
+   walk-through list, and the walk's third beat says the same thing in words on
+   every arrival: "The colors tell you which muscle groups you're looking at. The
+   brightness tells you what job they are doing." Rules with no markup are a key
+   that looks available and is not; `roleLegend.test.js` now holds the absence
+   and says what would have to be true for one to come back. */

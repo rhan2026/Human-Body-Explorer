@@ -1,0 +1,549 @@
+/**
+ * The signalling readout. Layout only — it borrows fiber.css for the panel and
+ * the definition lists, and cell.css's `.cell-arrival` / `.cell-out-of-range` /
+ * `.cell-heading` for the two disclosure marks and the column header, because
+ * those are the same disclosures on the same shell and a second definition of
+ * them would be a second opinion about what a disclosure looks like.
+ *
+ * THREE ARMS, THREE HUES, NO OPACITY. Warm is resistance, cool is endurance,
+ * slate is the control — the same three the scene draws, so the panel and the
+ * viewport name the arms the same way. Not one of them is distinguished by being
+ * fainter: opacity is how uncertainty is drawn, and the cell scale shipped a
+ * faded copy that a reader who had never seen the model called a band on sight.
+ * That went for the output rows too, which is where this file used to make an
+ * exception: "a baseline beside two results" is exactly the sentence a band is
+ * drawn under. The control takes `--arm-control` from cell.css — one slate, one
+ * definition, both scales.
+ *
+ * The twelve-output table those three hues were written for left on 2026-08-25
+ * (fixing-prd §1, §4) and the hues did not: the panel still names the two bouts
+ * once — on the authors' two validation scores and on the control's own drift —
+ * and `.sig-arm--control` is what `cellGeometry.test.js` reads to check that
+ * neither panel re-fades the control its scene stopped fading. `.sig-three-arm`
+ * and the bare `.sig-arm` went with the table they laid out.
+ */
+
+@import "../cell/cell.css";
+
+.sig-arm--resistance {
+  color: var(--arm-resistance);
+}
+
+.sig-arm--endurance {
+  color: var(--arm-endurance);
+}
+
+.sig-arm--control {
+  color: var(--arm-control);
+}
+
+/* `.sig-node`, `.sig-node__gloss` and `.sig-forbids` went on 2026-08-25 with the
+   two things they styled — the doors sentence, which is a callout and a fan of
+   lit edges in the scene now, and the PGC_1a paragraph, which argued against a
+   claim this screen was never making. Named here rather than silently absent
+   because a rule with no element is the harder thing to notice: the next reader
+   of this file should know these are gone on purpose and not restore them for
+   markup that has also gone. */
+
+.sig-metrics dt {
+  line-height: 1.5;
+}
+
+/* THE PANEL COLUMN IS GONE ON THIS SCALE ONLY, 2026-08-30 ("sidebar 영역을 아예
+   없애야지"). `.fiber` is `1fr 272px` and it is shared by all three scale
+   scenes, so the column cannot be taken out there without taking the fibre's
+   and the cell's panels with it. This is the lane-local override: same block,
+   one extra class, so it wins on specificity rather than on which stylesheet
+   the bundler happened to put last.
+   The rows stay `minmax(0, 1fr)` from `.fiber` — the stage is the only child
+   now, and the readout moved inside it rather than becoming a second row that
+   would have squeezed the picture by its own height. */
+.fiber.sig-no-panel {
+  grid-template-columns: minmax(0, 1fr);
+  /* AND THE ROWS, WHICH THIS BLOCK USED TO LEAVE TO `.fiber` — measured
+     2026-08-31 at 320x640, canon S1.
+
+     The base `.fiber` rule really is one row, so the note that used to stand
+     here ("the rows stay minmax(0, 1fr) from `.fiber`") was true of the rule it
+     was read against and false of the one that applies: under 1000 px
+     `fiber.css` sets `minmax(220px, 42vh) minmax(0, 1fr)`, a stage row and a
+     panel row. The panel is gone from this scale. So the stage took 42 vh —
+     **269 px of a 640 px window** — and the other 371 px was blank paper held
+     for a column that does not exist. The whole cell, five compartments and a
+     hundred and twenty marks, in the top third of a phone.
+
+     `fiber.css` already fixed exactly this for the fibre and wrote down why:
+     "deleting the sidebar left the reserved space vertically instead of
+     horizontally... One track, and the stage takes the window." That fix was
+     `.fiber--stage-only`, which this scale does not carry.
+
+     Declared on the base rule rather than inside a copy of the media query:
+     this selector is more specific than `.fiber`, so one line wins at every
+     width and there is no breakpoint here to keep in step with that one. */
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/* WHAT IS LEFT OF THE READOUT IS DISCLOSURE, AND A DISCLOSURE GOES OVER THE
+   PICTURE. Only §9 text renders here now — the out-of-range banner, the carried
+   instant, the replay seam — and each is about the frame a viewer is looking at,
+   so it belongs on the frame. Absolute rather than a grid row because it is
+   empty on almost every load: a flowed element would reserve height for a
+   message that is not there, which is the panel column's own defect one element
+   down. `.fiber__stage` is already `position: relative`.
+   Above the canvas and never wider than the picture it annotates. `z-index: 2`
+   was chosen to sit under the transport strip's own layer; the strip left this
+   scale with canon D3 on 2026-08-30, so the value now only says "above the
+   canvas" and there is nothing left for it to sit under. */
+.sig-no-panel .sig-metrics {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  width: min(34rem, calc(100% - 2rem));
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+/* An empty disclosure area is not a box. Every child is a `<p className="note">`
+   and they carry their own paper; the container must not paint one. */
+.sig-no-panel .sig-metrics:empty {
+  display: none;
+}
+
+/* THE STACKED LAYOUT KEEPS ITS TWO ROWS, AND THE SECOND ONE IS EMPTY ON THIS
+   SCALE. Tried and reverted 2026-08-30: at 1000 px and under `fiber.css` gives
+   the stage `minmax(220px, 42vh)` and the rest to the panel, so with no panel
+   this scale shows a 354 px picture over roughly 400 px of nothing at 390x844.
+   Giving the stage the whole grid looked like the fix and was worse — a
+   full-height stage on a phone is 390x700, an aspect of 0.56, and this drawing
+   is wider than it is tall at every band. The network was clipped at both sides.
+   Measured, then reverted: a picture with its edges cut off is worse than a
+   picture with paper under it.
+   The real fix is a camera that pulls back as the aspect narrows, so a portrait
+   stage shows the whole width. That is responsive framing rather than a
+   stylesheet rule, it touches the framing the anchor contract and all four of
+   the pass's beats are written against, and it is reported to `main` rather than
+   slipped in here. */
+
+/* THE HEADLINE, THE FACTS BLOCK AND THE RUN AXIS MOVED OUT on 2026-08-31,
+   to `src/scaleHead.css`. Two scales draw them now — this one and the cell —
+   and a stylesheet only one of them imports is a rule the other silently does
+   not get: the cell's headline rendered unstyled until the sheet moved. The
+   classes went from `.sig-*` to `.scale-*` with it, because a name that says
+   which scale owns it is a lie the moment a second one uses it. */
+
+/* ─── the explorer ──────────────────────────────────────────────────────────
+ *
+ * THREE CONTROLS AND A READOUT, ON THE PICTURE THEY DRIVE.
+ *
+ * Every toggle this scale owned was deleted on 2026-08-30 ("toggle들은 다 없애자
+ * <- guided pass에만 집중해"), and the note in `SignallingScale.jsx` where the
+ * chips used to be argues the case well. What brings a switch back is not a
+ * change of mind about clutter — it is that this floor's subject turned out to be
+ * a COMPARISON, and the brief's first non-negotiable is that a viewer can see
+ * both sides of it. A comparison with no way to isolate one side is a picture you
+ * can look at and not a thing you can ask a question of.
+ *
+ * SO THE COUNT IS THE POINT. Three controls, named in the brief, and no fourth.
+ * They float on the stage rather than sitting in a bar above it — canon F2's
+ * *"Gizmos식 토글도 main 화면 안에 디자인 잘 입혀서 floating하게"* — in the corner
+ * opposite the transport, so the two things that float over the drawing never
+ * argue about the same pixels.
+ */
+
+.sig-explorer {
+  /* TOP LEFT, 2026-09-06 — the orchestrator's brief for this lane, verbatim:
+     *".sig-explorer moves to the top left"*. Under the floor title (the shell's,
+     60,12 110x31 at 1280x800) and above the selection card, which moves down
+     to make room (`.sig-pick`). The bottom centre it leaves is the timeline's
+     again, alone. */
+  position: absolute;
+  left: 16px; /* TOP-LEFT, VERTICAL — 2026-09-07, owner (signalling S3): *"왼쪽 위 그리고 horizontal 아니고 vertical"* */
+  top: 56px;
+  align-items: flex-start;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+  /* A PLATE, LIKE EVERY OTHER CONTROL CLUSTER IN THE APP — 2026-09-06. These
+     two rows sat directly on the 3D with the group labels at 0.55 opacity, over
+     a scene of grey-brown nodes and white dust, and photographed as though they
+     had been clipped off the bottom of the window. Nothing was clipped; there
+     was just nothing behind them. ENERGY's `.energy-controls` and FIBER's
+     `.fiber-levels` have carried this exact plate for weeks, so this is the
+     floor joining them rather than a new idea. */
+  padding: 7px 11px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb, #faf8f5 92%, transparent);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 18px rgba(38, 34, 29, 0.12);
+}
+
+.sig-explorer__group {
+  display: flex;
+  flex-direction: column; /* one chip per row — owner, S3 */
+  align-items: stretch;
+  gap: 4px;
+  pointer-events: auto;
+}
+
+/* (`.sig-explorer__label` left with the TRACE row, 2026-09-06 — one row of
+   three chips needs no heading, and the 42 px it took was what put the
+   resistance chevron under this plate at 1280x800.) */
+
+/* ONE CHIP SHAPE FOR EVERY CONTROL ON THIS FLOOR, including the closing strip's
+   four. A viewer learns "this rounded thing is pressable" once. */
+.sig-chip {
+  border: 1px solid rgba(64, 60, 54, 0.28);
+  background: rgba(250, 248, 245, 0.86);
+  color: #403c36;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  position: relative;
+  backdrop-filter: blur(3px);
+  transition: background 140ms ease, border-color 140ms ease, opacity 140ms ease;
+}
+
+.sig-chip:hover:not(:disabled) {
+  border-color: rgba(64, 60, 54, 0.55);
+}
+
+.sig-chip.is-on {
+  background: #403c36;
+  border-color: #403c36;
+  color: #faf8f5;
+}
+
+.sig-chip:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+/* THE TWO ARM CHIPS WEAR THEIR OWN COLOUR WHEN THEY ARE ON, and the hexes are
+   `heroGeometry.js`'s `RESISTANCE_TINT` and `ENDURANCE_TINT` — the same two the
+   pulses and the meters are drawn in. A control tinted differently from the
+   thing it controls is a second colour language to learn. */
+.sig-chip--resistance.is-on {
+  background: #b06a60;
+  border-color: #b06a60;
+}
+
+.sig-chip--endurance.is-on {
+  background: #7099b3;
+  border-color: #7099b3;
+}
+
+/* WHICH SIDE IS THE VISITOR'S, AS A DOT. Brief §18 — their exercise belongs to
+   one side and the floor still shows both, so this marks and never selects. */
+.sig-chip__yours {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+/* ─── the timeline's grab handle ────────────────────────────────────────────
+ * INVISIBLE AND ON TOP OF THE BAR IT DRIVES, so the mark a viewer sees is the
+ * thumb they reach for. A native range gets keyboard stepping, a focus ring and
+ * the right role for nothing, which is the whole reason it is one.
+ */
+/* NO `position` HERE, AND THE ONE THAT WAS KILLED THE CONTROL — 2026-09-05.
+   This read `.scale-time { position: relative; }`, put there to give the
+   invisible range below it something to be `inset: 0` against. `scaleHead.css`
+   already sets `position: absolute` on the same element with
+   `bottom: 1.1rem; left: 50%; transform: translateX(-50%)` — and `absolute`
+   establishes a containing block just as `relative` does, so the override
+   bought nothing and cost the placement.
+   MEASURED: the timeline sat at y = **-18** in an 800px window, 480x21 of it,
+   `opacity: 1` and `visibility: visible` and entirely above the top edge. The
+   brief asks for this control in as many words — *"This scale had no timeline
+   at all; the brief asks for one, and a comparison a viewer cannot scrub is a
+   comparison they have to take on trust"* — and it was in the DOM, sized,
+   labelled `0 min · exercise · 45 min`, reaching no pixel. That is this
+   project's recurring defect wearing a stylesheet. */
+
+/* AND IT SITS ABOVE THE CONTROLS, WHICH IS THE HALF THE REMOVED OVERRIDE WAS
+   REACHING FOR — 2026-09-05.
+   `scaleHead.css` anchors this at `bottom: 1.1rem`, which is right on the two
+   floors that have nothing else along their foot. This one puts SHOW and TRACE
+   there: measured, `.sig-explorer` spans 653–708 and the timeline landed
+   681–703, entirely inside it — "EXERCISE" drawn through "Whole network".
+   `.sig-explorer`'s own note says the bottom centre is "the only span of this
+   stage nothing else claims", and that stopped being true the moment the
+   timeline could be seen. So the timeline takes the row above: the explorer is
+   12px up and 55 tall, and 5.2rem clears its top with a gap rather than
+   touching it. Nothing moves horizontally — `.scale-facts` ends at x 258 and
+   this starts at 400. */
+/* BACK AT THE SHELL'S OWN FOOT, 2026-09-06. The 5.2rem above it lifted the
+   timeline over the explorer cluster; the cluster is top-left now and the
+   outcome captions hang where the lifted timeline used to be — photographed,
+   "Growth" drawn through "EXERCISE". `scaleHead.css`'s bottom: 1.1rem stands. */
+
+.scale-time__grab {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+.scale-time__grab:focus-visible {
+  opacity: 1;
+  outline: 2px solid #403c36;
+  outline-offset: 2px;
+}
+
+/* ─── what the pointer is on ────────────────────────────────────────────────
+ * HOVER IS ONE LINE AND IT LEAVES WITH THE POINTER. It sits at the top of the
+ * stage, opposite the explorer, so a viewer reaching for a node never has the
+ * answer appear under their own hand.
+ */
+.sig-pick {
+  /* TOP LEFT, UNDER THE EXPLORER — which took the slot under the title on
+     2026-09-06. 140 clears the cluster's 56 + 71 with a gap; measured. The
+     hover line that shared this rule is gone (owner §9: hover is the name, and
+     the name is the plate at the node). */
+  position: absolute;
+  left: 16px;
+  bottom: 16px; /* BOTTOM-LEFT — owner 2026-09-07: *"논문 관련 박스들은 아예 왼쪽 밑"*; the chips keep the top-left. The paper's future panels take this slot at this size. */
+  z-index: 3;
+  max-width: min(220px, 40%);
+  margin: 0;
+  padding: 8px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(64, 60, 54, 0.18);
+  background: rgba(250, 248, 245, 0.92);
+  backdrop-filter: blur(3px);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+
+.sig-pick__name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 4px;
+}
+
+.sig-pick__clear {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 11px;
+  color: #403c36;
+  opacity: 0.6;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.sig-pick__say {
+  margin: 0 0 8px;
+  opacity: 0.82;
+}
+
+/* ─── the paired reading ────────────────────────────────────────────────────
+ *
+ * LENGTH IS THE CHANNEL AND THE BRIEF'S RULE 6 IS WHY.
+ *
+ * *"If a biologically important difference is too small to read through color,
+ * introduce a second honest visual channel — length, position, paired meter."*
+ * This floor's worst case is PGC-1α, which ends +25.8 % under resistance against
+ * +25.7 % under endurance. No tint carries that, and it should not have to: two
+ * bars of the same length say "level", which is the finding.
+ *
+ * THE BARS ARE NOT NORMALISED against each other or stretched to fill. A gap
+ * that looks small IS small — the width is the authors' own activation times the
+ * track. That is the difference between showing a comparison and manufacturing
+ * one, and `SignallingReadout.jsx` records the round this project lost to it.
+ */
+
+.sig-pair {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.sig-pair__row {
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.sig-pair__row dt {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.sig-pair__row dd {
+  margin: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* THE TRACK, so a bar at zero still has a place a viewer can see is empty —
+     the same reason the 3D meters stand on a rail. On this floor "both of these
+     are zero" and "there is no reading here" are completely different
+     statements, and the two endurance doors under a lifting workout are the
+     case that makes it matter. */
+  background: linear-gradient(rgba(64, 60, 54, 0.10), rgba(64, 60, 54, 0.10)) left center / 100% 9px no-repeat;
+  border-radius: 3px;
+  min-height: 13px;
+}
+
+.sig-pair__bar {
+  height: 9px;
+  border-radius: 3px;
+  min-width: 2px;
+  transition: width 120ms linear;
+}
+
+.sig-pair__row--resistance .sig-pair__bar {
+  background: #b06a60;
+}
+
+.sig-pair__row--endurance .sig-pair__bar {
+  background: #7099b3;
+}
+
+.sig-pair__num {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  opacity: 0.62;
+  margin-left: auto;
+  padding-left: 6px;
+  animation: trace-num-in 400ms ease both;
+}
+
+/* THE PAIR IS PRESSABLE, 2026-09-07 (`docs/20260907-fix/evidence_trace_clean.md`):
+   the two lengths stand on their own and the values come out on a press.
+   No box around it — the panel is the box. */
+.sig-pair {
+  cursor: pointer;
+  border-radius: 6px;
+}
+.sig-pair:focus-visible {
+  outline: 2px solid var(--accent, #2f6fd0);
+  outline-offset: 3px;
+}
+/* The floor's one quiet line, under the pair. */
+.sig-pick__source {
+  display: flex;
+  justify-content: flex-end;
+  margin: 8px 0 0;
+}
+
+/* THE OUTCOME ZONE'S WORDS — owner §8's sketch. Plain small caps on the paper,
+   not plates: a legend for the zone, sitting where `heroGeometry`'s hairline
+   starts and under each of the three forms. (The closing strip's rules stood
+   here until 2026-09-06; the strip is deleted, see `SignallingScale.jsx`.) */
+.sig-zone {
+  display: inline-block;
+  transform: translate(0, calc(-100% - 6px));
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #403c36;
+  opacity: 0.62;
+  white-space: nowrap;
+}
+
+.sig-zone__name {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #403c36;
+  opacity: 0.72;
+  white-space: nowrap;
+}
+
+/* A PHONE PUTS THE EXPLORER UNDER THE PICTURE RATHER THAN ON IT. At 390 px the
+   stage is already the binding constraint (see the reverted full-height
+   experiment above), and three rows of floating chips over a drawing that
+   narrow covers the thing they are for. */
+/* AND `static` PUT IT AT THE TOP, WHICH IS THE OPPOSITE OF THE SENTENCE ABOVE.
+   Measured 2026-09-05 at 390x844: `.sig-explorer` came out at `0,0 390x63` —
+   document order puts it BEFORE the canvas, so un-anchoring it did not move it
+   under the picture, it moved it over the ☰ and the words "Cell Signalling".
+   The intent is right and the mechanism was wrong: on a phone these chips must
+   not float over a narrow drawing, and they must not land on the title either.
+   So they stay anchored and take the foot, stacked with the timeline rather
+   than sharing a row with it — the same collision the desktop had, met before
+   it happened this time. `.scale-facts` gets out of the way in `scaleHead.css`
+   at 640px already. */
+@media (max-width: 560px) {
+  .sig-explorer {
+    /* Measured 2026-09-06 at 390x844: the shell's `.ways` column stands at
+       285,16 89x103, so the cluster stops short of it — `right: 112px` — and
+       wraps its chips inside the 268 px left; the SHOW row is 230. */
+    top: 52px;
+    left: 10px;
+    right: 112px;
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 6px 10px;
+    max-width: none;
+  }
+
+  /* Above the chips, for the reason the desktop rule gives: two blocks cannot
+     have the same row. The chips wrap to two lines at this width, so the clear
+     is bigger than the desktop's. */
+  /* The timeline stays at the shell's foot here too — nothing floats under it
+     any more. */
+
+  /* AND THE CREDIT BLOCK MOVES, NOT THE TIMELINE. `scaleHead.css` already
+     narrows `.scale-facts` to 11rem at 640px and it still ran through the
+     timeline here — measured, facts 18,537 176x130 against time 18,623
+     355x21, sharing x 18-194.
+     WHICH ONE YIELDS IS THE WHOLE OF THE DECISION. The facts are the drawn-
+     component count and the authors' validation scores: true, worth reaching,
+     and read once. The timeline is a control, and §19 calls scrubbing it this
+     floor's hero moment. A control and a credit cannot share a row, and on a
+     390 px stage the credit is the one that can stand higher without costing
+     anything. */
+  /* (`.scale-facts` had a lift here; the block left this floor on 2026-09-06.) */
+
+  .sig-pick {
+    position: static;
+    max-width: none;
+    margin: 8px 10px 0;
+  }
+}
+
+/* THE SEAM'S VEIL — fifth brief §8. A paper-coloured sheet over the canvas
+   whose opacity the frame loop writes (`runVeil.js`): up over the last 200 ms
+   of the run's closing hold, down over the first 250 ms of its opening one.
+   Above the canvas and the zone captions (they are the scene), under the
+   explorer, the pick and the timeline (z 2–3), and never a pointer target. */
+.sig-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* WHERE THE NUMBERS COME FROM — 2026-09-07, owner (S3): *"이게 결국 논문인가"*. They are
+   the published model's own node activities on its protocol — not a measurement,
+   not our arithmetic. One line, the paper reachable — BOTTOM-LEFT, always (last pass, L3). */

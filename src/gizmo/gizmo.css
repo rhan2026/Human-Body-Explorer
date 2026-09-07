@@ -1,0 +1,366 @@
+/**
+ * The gizmo's look. Same paper, same rule colour, same uppercase micro-label as
+ * fiber.css's `.fiber-label` and styles.css's `.label` — a callout in the
+ * viewport and a heading in the side panel have to read as one system, which is
+ * the reason those values are not re-picked here.
+ *
+ * What is new is that a gizmo carries a NUMBER, so it has two type sizes: the
+ * name in the existing 10px uppercase, and the value at 15px in the body face,
+ * because the number is the thing a reader came for and the name is its caption.
+ */
+
+.gizmo-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Unplaced plates would otherwise all flash at 0,0 for one frame while their
+   boxes are measured. */
+.gizmo-layer[data-placed="no"] {
+  opacity: 0;
+}
+
+.gizmo-layer__lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gizmo-layer__lines path {
+  fill: none;
+  /* NOT `--line`. The panel's rule colour is #e2e6ec, which over this paper
+     measures 1.06:1 — at 0.55 opacity the leader lines were invisible in a
+     1920 px capture and the gizmos read as floating boxes. The line is the
+     thing that makes a callout point at something, so it is the text colour
+     held back to 0.5: measured 3.27:1, over WCAG 1.4.11's 3:1 floor for a
+     graphical object, and still quieter than the plate it leads to. 0.45
+     measured 2.83 and was not enough. */
+  stroke: var(--text);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+.gizmo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Positioned by transform, written once per frame from the layout solver.
+     Setting `left`/`top` instead would put every plate through layout on every
+     frame the camera moves. */
+  will-change: transform;
+
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  /* Wide enough that a name, its number and its evidence word all fit without
+     the name ellipsising — measured: `ATP · ADP · AMP 6.489 mM ILLUSTRATIVE`
+     was truncated to `ATP · ADP · A…` at 280, and `A-band · never changes
+     length 1.60 µm ILLUSTRATIVE` still was at 360. At 400 nothing truncated at
+     768 or above — until 2026-08-29, when the fibre's burst plate took a unit
+     that names its protocol (`bursts · a 0.65 s stride at 100 Hz`, Q24 R2/R6)
+     and the name beside it, `T-tubule · carries the signal`, was given 75 px of
+     the 400 for the 199 it needs. `gate-legibility` caught it and quoted this
+     comment's own argument back.
+     545, measured rather than guessed, and three times: 460 left the name 135
+     px of the 199 it needs, and 530 left it 196 of 199 — three px short, and
+     only at the END of the run. The gate samples six times because the value
+     COUNTS UP: `2 of 10` becomes `10 of 10` and the plate grows with it, so a
+     cap fitted to the opening frame fails exactly when the thing it explains
+     finishes happening. At the widest frame this plate holds a 199 px name, a
+     235 px value-and-unit and a 66 px badge, which is 532 with its gaps,
+     padding and border; 545 leaves the margin.
+     THE WIDENING WAS CHECKED FOR COLLISIONS BEFORE IT WAS KEPT, because a wider
+     plate is exactly how a layout solver starts painting one thing over
+     another. Measured at 1201 px with the cap at 400 and again at 530: the same
+     three overlaps, 3108, 2208 and 2208 px², byte for byte. They are older than
+     this change and none of them is a number over a number — Z-disc, Titin and
+     Actin are label-only plates. TODO.md carries them, because no gate looks at
+     1201 px; the one that does look, at 320, is green either way.
+     The viewport term is untouched, so a 320 px phone is exactly as it was —
+     the one place this rule accepts truncation, and the place the solver has
+     the least room. */
+  max-width: min(545px, calc(100vw - 24px));
+
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: color-mix(in srgb, #faf8f5 88%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+
+/* SMALLER ON A PHONE, BECAUSE THE SOLVER MEASURES WHAT IT IS GIVEN.
+   `Gizmos` reads each plate's real `offsetWidth` before placing it, so shrinking
+   the plate is the one lever that gives the solver more room without taking a
+   plate away. Measured 2026-08-26: the signalling scale's five plates — all five
+   carry a value, so there are no names to fold the way the fibre scale folds
+   its six — collided at 320 px by 378, 321, 222 and 175 px². Small overlaps, and
+   `gate-legibility` was right to call them; a number painted over another number
+   is the one collision a reader cannot work around.
+   The trade is truncation, which the rule above already accepts on a 320 px
+   phone. An ellipsised name a viewer can still read beats two numbers on top of
+   each other. Nothing changes at 421 px and up. */
+@media (max-width: 420px) {
+  .gizmo {
+    font-size: 11px;
+    padding: 2px 6px;
+    gap: 0.3rem;
+    /* NARROWER, AND IT WRAPS. Q11 gave every plate a clause and Q12 R3 measured
+       what that did to a phone: at 320 px the cell's three plates were 280 px
+       each — the full width the rule below used to allow — so the solver had no
+       horizontal freedom left, stacked them, and ran out of vertical room. Two
+       of the three overlapped by 840 px², which is the one collision the file
+       above says a reader cannot work around: a number painted over a number.
+       Capping at half the viewport and letting the plate wrap turns the name and
+       its value into two lines instead of one long row, which gives the solver
+       back the axis it places on. Taller and legible beats wide and on top of
+       something.
+
+       AND THE WRAP IS NOT IN THIS FILE, WHICH IS A KNOWN DEFECT AND NOT A
+       TYPO. This paragraph has said "letting the plate wrap" since Q12 R3 and
+       `.gizmo` is `display: flex` with the initial `flex-wrap: nowrap`, so
+       nothing wraps. The shrinking lands entirely on the name — the only child
+       with `overflow: hidden`, so the only one whose min-content width is zero
+       — and at 320 px on the signalling scale it lands all the way: measured
+       Q17 R8, `reached by both` renders at **width 0** while its value takes
+       173.7 px of a 260 px plate and the badge 66.3. Not an ellipsis. The whole
+       name, with no "…" to say it went.
+       ADDING THE WRAP MAKES IT WORSE AND WAS TRIED. With `flex-wrap: wrap` and
+       a `min-width` on the name the names come back in full and the plates grow
+       a line: at 320 px the cell then paints "20" over "10" across **1330 px²**
+       and seven more pairs, and signalling paints "17 of 58" over its badge
+       across 1193. A number over a number is the one collision the paragraph
+       above says a reader cannot work around, so this stays as it is until the
+       LAYOUT SOLVER is part of the fix — the plates are absolutely positioned
+       from measured `offsetWidth`, so making them taller without telling it is
+       what produced those numbers. TODO.md carries it. */
+    max-width: calc(100vw - 60px);
+  }
+}
+
+/* The layer is inert so a viewer can orbit the scene through it. The evidence
+   badge inside a plate is a real button — lane 4's, opening the provenance
+   record — and has to be clickable, so the exception is scoped to it rather
+   than to the plate. Without this the badge is drawn and dead. */
+.gizmo button {
+  pointer-events: auto;
+}
+/* A floor that hands `onPress` makes the plate itself pressable (FIBER, 2026-09-07). */
+.gizmo--press {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.gizmo__name {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A NAME THAT CARRIES A GREEK LETTER CANNOT BE UPPERCASED. `text-transform`
+   turns α into Α, and those are two different characters — only one of them is
+   the name the authors write. `heroGeometry.js`'s `SPELLED` marks the few that
+   are spelled rather than derived. */
+.gizmo__name--exact {
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+
+.gizmo__value {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.gizmo__unit {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+/* Same 14px rule as `.fiber-label__swatch` and `.cell-legend b`, for the same
+   reason: a condition drawn in a colour must be named with that colour, or the
+   reader is matching a word in the viewport to a line in the panel by guess. */
+.gizmo__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+
+/* THE PASS'S POINTER. While a beat names a subject (`focus` on the beat, wired
+   through the scene), the named plate comes forward and every other plate steps
+   back — the design-pass answer to "i dont even know where the store is": the
+   sentence and the one bright plate agree about what you are looking at.
+   Opacity for the others, not display: the layout solver measured them and the
+   scene is calmer when nothing reflows. Transitions long enough to read as the
+   light moving, short enough not to lag the line. */
+.gizmo {
+  transition: opacity 320ms ease, box-shadow 320ms ease, border-color 320ms ease;
+}
+.gizmo--dim {
+  /* 0.15, down from 0.28 after the first screenshot: at a close beat the
+     solver parks off-frame plates along the bottom edge, and at 0.28 the pile
+     read as smudged text. Recessive enough to be furniture, still there for a
+     glance. */
+  opacity: 0.15;
+}
+/* NO ORANGE — 2026-09-06, owner: *"이 orange accent on parts 개 ㅈ같아
+   (everywhere)"*. The focused plate used `#b4530a` for its border and a warm
+   glow under it, which was the same accent the ring on the part was using, so
+   the two agreed by colour. The ring is gone and the PART now says it is the
+   subject by keeping its colour while the others wash toward paper, so the
+   plate only has to look like the plate that belongs to it: full weight, the
+   app's own ink, and a lift. Nothing here needs a hue to mean "this one". */
+.gizmo--focus {
+  border-color: var(--text);
+  box-shadow: 0 0 0 1px var(--text), 0 2px 14px rgba(38, 34, 29, 0.22);
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gizmo { transition: none; }
+}
+
+/* `el.hidden` is this file's off switch — the facing-hide and the fold both
+   flip it. But `.gizmo { display: flex }` above outweighs the browser's own
+   `[hidden] { display: none }`, so for a while the attribute silenced nothing:
+   the 320 px signalling fold "ran" three times with the identical 1691 px²
+   still on screen. An off switch must beat the on switch. */
+.gizmo[hidden] {
+  display: none;
+}
+
+/* THE VEIL. One thing is being spoken about; the rest of the drawing steps
+   back rather than disappearing — a viewer still sees the whole shape, just
+   not as loudly as the part with the ring around it.
+   The hole is wide enough to clear the beacon at every scale's ring size
+   (0.18-0.26 world units read as roughly 60-100 px at these cameras), and the
+   falloff is long so the edge never reads as a drawn circle. The wash is the
+   page's own colour, so a faded mark looks far away rather than greyed out. */
+.gizmo-veil {
+  z-index: 1;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--x, 50%) var(--y, 50%),
+    transparent 0,
+    transparent 105px,
+    color-mix(in srgb, var(--bg) 74%, transparent) 260px,
+    color-mix(in srgb, var(--bg) 74%, transparent) 100%
+  );
+  animation: gizmo-veil 320ms ease both;
+}
+.gizmo-veil[hidden] {
+  display: none;
+}
+@keyframes gizmo-veil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gizmo-veil { animation: none; }
+}
+
+/* ---- the handles: a part you can press ----------------------------------- */
+
+/* Canon D2ⓐ, 2026-08-31. `Handle.jsx` carries why the press is a ring rather
+   than the plate. This is only its hit target, and it is the same 44 px square
+   `.wayin__target` uses for the same reason — a ring drawn at 26 px is a
+   drawing, not a target, and the two affordances on these stages must not need
+   different aim. */
+.handle__target {
+  position: absolute;
+  left: -22px;
+  top: -22px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.handle__target:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* ---- D5: every element, named in place, before anything is asked --------- */
+
+/* Canon D5: *"action 전에 모든 element를 먼저 보여준다 — this does this, this is
+   here. 끝나면 그 층의 main 상태로 간다."*
+
+   THIS IS THE WHOLE OF IT, AND IT WRITES NOTHING. The plates arrive one at a
+   time, in place, each on the part it names — which IS "this is here", said by
+   the picture rather than by a sentence about the picture. "This does this" is
+   what the demonstration says when a visitor presses the ring, which is where
+   D2ⓐ puts it: after the action, not before.
+
+   The alternative was a second script — five new sentences per scale, fifteen
+   in all, narrating parts a viewer had not asked about yet. That is the pass
+   this canon deleted, shorter. §9's default is empty; a name on a thing is not
+   a sentence.
+
+   `--i` is the plate's place in the solved layout, set by `Gizmos.jsx`. The
+   cascade runs once on arrival and never again: it is an introduction, and an
+   introduction that repeats is a loading state. */
+.gizmo-layer[data-intro="yes"] .gizmo {
+  animation: gizmo-arrive 420ms ease both;
+  animation-delay: calc(var(--i, 0) * 260ms);
+}
+/* OPACITY AND NOTHING ELSE. `transform` ON A PLATE BELONGS TO THE SOLVER, which
+   writes it inline every frame — `gizmoLayout` decides where a name goes, and
+   this stylesheet does not get a vote.
+
+   THE FIRST VERSION ALSO EASED `translateY(3px) -> none`, and `none` is not
+   "leave it alone": with `animation-fill-mode: both` the keyframe holds, so an
+   animated plate had its inline `translate3d(212px, 407px, 0)` overridden and
+   drew at the layer's origin. Every name in the cascade stacked in the top-left
+   corner, under the app title, for the whole introduction. Screenshotted at
+   320x640 on 2026-08-31; the DOM said `translate3d(94px, 550px, 0)` and
+   `getBoundingClientRect()` said 0,0 in the same breath, which is what a
+   stylesheet quietly winning an argument looks like.
+
+   Both were mine and both shipped the same day. Measuring the opacity ramp and
+   screenshotting after the cascade is how a thing can be green and wrong at the
+   same time — CLAUDE.md §4. */
+@keyframes gizmo-arrive {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* The names still arrive in order — that is the content — only faster. */
+  .gizmo-layer[data-intro="yes"] .gizmo {
+    animation-duration: 200ms;
+    animation-timing-function: linear;
+  }
+}
+
+/* A PHONE CANNOT HOLD FIVE 44 px TARGETS ACROSS A 230 px OBJECT.
+   Measured 2026-08-31 at 320x640: the whole sarcomere row is framed to the
+   window's width, so it draws about 230 px wide and myosin's ring lands 23 px
+   from tropomyosin's — the same collision the world-space fix closed at 1280,
+   reopened by the scale. 24 px is WCAG 2.2 AA's floor for a target and it makes
+   two rings 23 px apart very nearly disjoint instead of one target wearing two
+   names. It is a floor, not a good size, and the real answer is above it:
+   whether a phone should frame the whole row at all is in TODO. */
+@media (max-width: 420px) {
+  .handle__target {
+    left: -12px;
+    top: -12px;
+    width: 24px;
+    height: 24px;
+  }
+}

@@ -1,0 +1,289 @@
+/**
+ * The reveal. A side sheet at desk width, a top or bottom sheet on a phone —
+ * never a centred modal, because the number the viewer asked about has to stay
+ * visible while they read the answer. Which of the four is chosen per open,
+ * from the badge's own rect: `placeSheet` in evidence.js, `.prov.is-*` below.
+ *
+ * It scrolls inside itself. The record's own strings are long (one
+ * `archive_version` is four lines of prose about missing .mat files) and
+ * truncating them would be this project editing its own provenance to fit a box.
+ */
+
+.prov {
+  position: fixed;
+  z-index: 40;
+  width: min(30rem, 100vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1.1rem 2rem;
+  background: var(--bg);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* Opened away from the badge that opened it, so the number stays on screen.
+   Four placements, and `placeSheet` in evidence.js picks one from the badge's
+   rect and the viewport. Deliberately not a media query: which placement is
+   right depends on WHERE THE BADGE IS, and CSS cannot see that. A fixed side
+   covered the badge at 1440, and a fixed bottom sheet covered it at 320. */
+.prov.is-right { top: 0; bottom: 0; right: 0; border-left: 1px solid var(--line); box-shadow: -12px 0 32px rgb(0 0 0 / 8%); }
+.prov.is-left  { top: 0; bottom: 0; left: 0;  border-right: 1px solid var(--line); box-shadow: 12px 0 32px rgb(0 0 0 / 8%); }
+
+/* The narrow pair. Bottom is the ordinary one; top exists because a bottom
+   sheet covers everything below 38% of the height, and lane 2 measured four of
+   the seven gizmo plates at the sarcomere framing sitting under that line at
+   320x640 — their badges opened a sheet on top of themselves, inside a layer
+   that is `position: absolute; inset: 0` and does not scroll, so nothing
+   rescued them. */
+.prov.is-sheet-bottom,
+.prov.is-sheet-top {
+  left: 0;
+  right: 0;
+  width: 100vw;
+  max-height: 62vh;
+}
+.prov.is-sheet-bottom { bottom: 0; top: auto; border-top: 1px solid var(--line); box-shadow: 0 -12px 32px rgb(0 0 0 / 10%); }
+.prov.is-sheet-top    { top: 0; bottom: auto; border-bottom: 1px solid var(--line); box-shadow: 0 12px 32px rgb(0 0 0 / 10%); }
+
+.prov:focus { outline: none; }
+
+.prov-record {
+  margin-top: 1.1rem;
+  border-top: 1px solid var(--line);
+}
+
+.prov-record > summary {
+  cursor: pointer;
+  padding: 0.6rem 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.prov-record > summary:hover { color: var(--text); }
+
+/* The absences read as a finding, not as leftovers. "The authors never
+   published this, so we made it and said so" is the most persuasive material in
+   the record and it was the most buried.
+
+   Selected by class, from the data. This was `:nth-of-type(4)` and it marked
+   the wrong group on every Francis scenario, which carries no absence fields at
+   all — the fourth section rendered there is "How it was run". */
+.prov-group--absence {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.6rem;
+}
+
+.prov-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.prov-word {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+/* BIG ENOUGH FOR A THUMB. Q15 R8, 2026-08-27: measured the record at 320 px,
+   where it opens as a bottom sheet — it fits the width exactly, both links
+   survive and Escape closes it. The one thing a viewer can SEE to dismiss it
+   measured **18x20**, under WCAG 2.2's 2.5.8 floor of 24, and a phone has no
+   Escape key. This project has already paid that floor twice, for the trail and
+   for the scrubber; `styles.css` carries both arguments.
+   The glyph is untouched — `font-size` still draws a 20 px ×, and the box around
+   it grew. Growing the character instead would have made the sheet's header
+   heavier to look at for the same hit area. */
+.prov-close {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.2rem;
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* The one sentence the panel exists to deliver. It is the largest text here on
+   purpose — everything below it is for the viewer who wants more, and the
+   viewer who wants more is the rarer one. */
+.prov-meaning {
+  font-size: 15px;
+  line-height: 1.45;
+  margin: 0.6rem 0 0;
+}
+
+.prov-why {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+
+/* Six words in a row, reading left to right as distance from an observation.
+   Not a progress bar and not a score: no fill, no colour ramp, no arrow. */
+.prov-ladder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.prov-ladder li {
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--muted);
+}
+
+.prov-ladder .is-here {
+  border-color: currentColor;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.prov-refusal,
+.prov-none {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+}
+
+.prov-reading {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 0.6rem;
+  margin: 0.9rem 0 0;
+  padding: 0.5rem 0.6rem;
+  background: var(--panel);
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.prov-reading > div { display: contents; }
+
+.prov-reading dt {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  align-self: center;
+}
+
+.prov-reading dd { margin: 0; }
+
+.prov-group { margin-top: 1.1rem; }
+
+.prov-group h3 {
+  margin: 0 0 0.35rem;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.prov-entry {
+  margin: 0 0 0.5rem;
+  /* The sha256 and the JSON inputs have no spaces to break at. */
+  overflow-wrap: anywhere;
+}
+
+.prov-key {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.prov-paper { margin: 1.1rem 0 0; }
+
+.prov-review {
+  margin: 1.2rem 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* THE BADGE, which is now a door. It looked identical to a static chip for as
+   long as it was one, and a hover title is not an affordance on a touch screen
+   — the reveal being invisible was this lane's whole defect. */
+.evidence {
+  position: relative;
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: inherit;
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  padding: 1px 4px;
+  white-space: nowrap;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+/* A THUMB-SIZED TARGET WITHOUT A THUMB-SIZED BADGE. Q33 R1, 2026-08-30,
+   measured at 320 and 375 px: every interactive element on all four scales is
+   under 44 x 44, and against WCAG 2.2 AA's 24 x 24 the ones that fail are the
+   two that matter most — the evidence badge at 66 x 19 and the licence deed
+   link at 72 x 13. The badge is what CLAUDE.md §5's floor rests on ("출처에
+   도달할 수 있게 한다") and the deed link is how a CC BY-SA obligation is
+   discharged; both were the hardest things on the screen to hit.
+   The visual box does not change, because it cannot: `gizmo.css` records that
+   at 320 px the plates already collide when they grow, and a taller badge is a
+   taller plate. So the HIT AREA grows and the drawing does not — 19 px becomes
+   31, 13 becomes 25, both clear of the 24 px floor. Coarse pointers and narrow
+   viewports only; a mouse does not need it and a wide screen has the room.
+   Checked after: no two hit areas on any scale overlap at 320 px, and every
+   badge still opens its own record. */
+@media (pointer: coarse), (max-width: 420px) {
+  /* -3 AND NOT -6, MEASURED. At -6 the badge's target is 31 px tall and two of
+     them overlap by 22 x 17 px on the fibre scale — a tap in that band opens
+     whichever record is painted on top, which is a worse defect than the one
+     being fixed. -3 puts a 19 px badge at 25, over WCAG 2.2 AA's 24 and clear
+     of its neighbour. */
+  .evidence::before {
+    content: "";
+    position: absolute;
+    inset: -3px -4px;
+  }
+  /* THE DEED LINK TAKES REAL PADDING INSTEAD, because its problem is the line
+     box and not the box. At 13 px tall it needs 6 px on each side to clear 24,
+     and an invisible overlay would put the two credits' targets on top of each
+     other — they sit on consecutive lines. `inline-block` with padding grows
+     the line that holds it, so the two move apart instead of overlapping. */
+  .licence-deed {
+    display: inline-block;
+    padding: 6px 2px;
+  }
+}
+
+.evidence::after {
+  content: "?";
+  margin-left: 3px;
+  opacity: 0.75;
+}
+
+.evidence:hover,
+.evidence:focus-visible,
+.evidence[aria-expanded="true"] {
+  opacity: 1;
+  border-color: var(--accent);
+  color: var(--accent);
+}

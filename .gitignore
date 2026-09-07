@@ -1,0 +1,18 @@
+# Secrets. The assistant's key lives here and is read server-side only.
+.env
+.env.*
+!.env.example
+
+# Build output and dependencies
+dist/
+node_modules
+.vercel/
+.vite/
+
+# Working material — screenshots, scratch scripts, notes.
+# This repository holds the deployable app and nothing else; the research
+# history, the mesh-set pipeline, the science layer and the project's working
+# documents live in the development repository.
+local/
+*.log
+.DS_Store

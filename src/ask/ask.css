@@ -1,0 +1,124 @@
+/**
+ * THE BOX AT THE FOOT OF EVERY WINDOW — Bell's own sheet for the input.
+ *
+ * Owner, 2026-09-06: *"a regtangular box with round corners on the lower center
+ * of all windows … white in color with no margins but divided from the
+ * background with shadows … a light grey text … saying "Ask Bell anything!""*.
+ * Each clause is a declaration below. "No margins" is read as no border line:
+ * the shadow is the whole of what separates the box from the picture, and it
+ * is the site's own — `assistant.css` throws exactly this one under the parked
+ * widget, so the box reads as this app's furniture rather than a new material.
+ *
+ * WHERE IT STANDS. `bottom: 18px` is the foot line the left dock
+ * (`styles.css .opacity-dock`) and Bell at home (`Guide.jsx FOOT`) already
+ * share. `z-index: 36` is the parked assistant's layer: above the stage and the
+ * fixed controls (35), below the scrim (40) and the drawer (50), so an open
+ * drawer dims it with the rest of the page. The width is the fibre subtitle's
+ * measure — 560, or the window less a margin each side.
+ *
+ * THE FOOT MOVES UP BY ONE NUMBER. The box is the bottom-most centre element
+ * and it may cover nothing, so whatever stood along the foot before it —
+ * BODY's timeline, SIGNALS' run axis, ENERGY's controls, the fibre's loading
+ * line, the front door's fallback pick pill — moves up by the box's height
+ * plus a gap. That clearance is `--ask-clear`, declared here once and read by
+ * each of those rules as `calc(<what it had> + var(--ask-clear))`, so the
+ * offset has one source and a change to the box's height is one edit.
+ * `Guide.jsx` reads the same property for the phone's home corner.
+ *   48 px box + 12 px gap = 60.
+ * A rounded RECTANGLE, not a pill: the owner said rectangular, and 999px would
+ * make it the transport pill this app already retired.
+ */
+:root {
+  --ask-clear: 60px;
+}
+
+.ask-bell {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 36;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(560px, calc(100vw - 36px));
+  height: 48px;
+  margin: 0;
+  padding: 0 7px 0 18px;
+  background: var(--bg);
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(22, 28, 36, .14);
+  font-size: 14px;
+}
+
+/* A box with no border still has to show where focus is — but the owner asked
+   for no border, and a solid 2 px accent ring (the first cut, photographed)
+   was one. A faint halo of the accent, added to the shadow rather than drawn
+   as an outline: still there for a keyboard, still not a line. */
+.ask-bell:focus-within {
+  box-shadow: 0 10px 30px rgba(22, 28, 36, .14), 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.ask-bell__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+/* The owner's "light grey": the muted token let through at about half, which
+   measures visibly lighter than body text and still reads on white. A literal
+   would be a fourth grey for `textClearsItsPaper.test.js` to argue with. */
+.ask-bell__input::placeholder {
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
+  opacity: 1;
+}
+
+/* One icon button. Send is the accent fill the drawer's primary action wears;
+   Stop takes the same footprint with the accent held to an outline, so the
+   state change reads without shouting — the widget's own pair. No word on it:
+   the label is for the tree, and every visible word is spent on all five
+   windows' budgets at once. */
+.ask-bell__send {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.ask-bell__send:hover { background: color-mix(in srgb, var(--accent) 85%, #000); }
+
+.ask-bell__send--stop {
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.ask-bell__send--stop:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+.ask-bell__send:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* A phone keeps the box off both edges and a little lower, the way the parked
+   widget did; the foot furniture above it moves by the same `--ask-clear`. */
+@media (max-width: 640px) {
+  .ask-bell {
+    bottom: 12px;
+    width: calc(100vw - 24px);
+  }
+}

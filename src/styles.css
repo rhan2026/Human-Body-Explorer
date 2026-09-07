@@ -1,0 +1,1251 @@
+:root {
+  --bg: #ffffff;
+  --panel: #f7f8fa;
+  --line: #e2e6ec;
+  --text: #161c24;
+  /* #636c7b, NOT #6b7686 — 2026-08-31, restoring the value the contrast gate
+     was written against. Rex's palette lightened it to 4.33:1 on `--panel`,
+     under AA's 4.5 for the 11 px this app writes most of its secondary text at,
+     and one of those sentences is the out-of-range notice: the line that tells a
+     viewer the picture is not showing the instant they asked for. That one has
+     to be readable by anybody. 4.99:1. */
+  --muted: #636c7b;
+  --accent: #2f6fd0;
+  /* THE QUESTION BOX'S FOOTPRINT AT THE FOOT-RIGHT — 2026-09-07. Owner: *"i want
+     the user tex box to be in the identical locaiton for all windows. for
+     exercise show moton windows, move the center motion progress bar to the left
+     a bit so the text box is in the same location to otehr widows"*.
+     The box (`guide/askBell.css`) stands 28 px in and 28 px up, 30rem wide, and
+     SIGNALS keeps a scrubber across the bottom centre that a box that long
+     reaches. It used to be left alone and the BOX stepped over it, which put
+     the box in three different places. (The body's rep timeline paid this too
+     until the owner deleted it, 2026-09-07.)
+     Now the box holds one place on every floor and the bars centre in what is
+     left: 30rem + the 28 px inset + a 16 px gap. Subtracting it rather than
+     shifting by a constant is what keeps this right at every width — at 1920
+     there is room to spare and at 1100 there is not, and a constant would be
+     wrong at both. */
+  --ask-reserve: 524px;
+  color-scheme: light;
+}
+
+/* A PHONE HAS NO FOOT-RIGHT TO RESERVE: the box spans the width there and
+   stands above these bars instead (`askBell.css`), so they centre as before. */
+@media (max-width: 640px) {
+  :root { --ask-reserve: 0px; }
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.app { display: flex; flex-direction: column; height: 100%; }
+
+.fatal {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ---- chrome ------------------------------------------------------------ */
+/* `.topbar`, `.footer` and `.brand` lived here until 2026-08-30, when every
+   scene moved onto the shared shell (drawer + scrim + viewbar) and nothing
+   rendered them any more — checked by grep before deletion, per CLAUDE.md §8. */
+
+.stats {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* The scale chain at the top of every drawer (ScaleTrail.jsx). Global, not
+   per-scene: it is the one piece of chrome that has to look identical
+   everywhere, because only its highlight is allowed to change from screen to
+   screen.
+
+   The arrows are `content`, so the steps are the only text — which is what lets
+   a test read a step without splitting a string, and what stops a fifth scale
+   needing a separator typed in beside it. Colour is inherited from the drawer
+   it rides in. */
+.trail {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.trail__step { opacity: 0.42; }
+
+/* Where the viewer is. Weight and opacity only — see ScaleTrail.jsx on why it
+   is not underlined and not the accent colour. */
+.trail__step[aria-current="step"] {
+  opacity: 1;
+  font-weight: 700;
+}
+
+.trail__step + .trail__step::before {
+  content: "→";
+  margin-right: 0.4rem;
+  font-weight: 400;
+}
+
+/* ---- the explorer's overlay chrome -------------------------------------
+   The explorer has no top bar and no footer any more: the stage is the page,
+   and the controls live in a drawer that slides OVER it. The stacking order is
+   decided once, here: stage content < pick pill < ride trigger (35) <
+   assistant (36 — draggable, so it must win against any fixed control it is
+   parked on) < scrim (40) < drawer (50) < trigger (60). Everything under the
+   scrim is visible but
+   inert while the drawer is open — the canvas never resizes, so the model and
+   the camera cannot move, which overlay-ui.spec.js measures. */
+
+.menu-trigger {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.menu-trigger:hover { border-color: var(--accent); }
+
+/* A chip whose group is turned OFF: the muscle-group chips say selection by
+   dimming the deselected rather than blueing the selected (owner,
+   2026-08-31). The BORDER stays at full strength — same line as a selected
+   chip, so a dimmed one still reads as pressable (owner, same day); only
+   the label and the group dot fade. Hover lifts the words back. */
+/* .chip declares its own color LATER in this file, so the dim needs the
+   doubled class to win the cascade. */
+.chip.chip--dim {
+  color: color-mix(in srgb, var(--text) 30%, transparent);
+}
+
+.chip--dim .dot {
+  opacity: 0.35;
+}
+
+.chip.chip--dim:hover {
+  color: var(--text);
+}
+
+.chip--dim:hover .dot {
+  opacity: 0.8;
+}
+
+/* The layer-opacity dock: the stage's bottom-left corner on the front door
+   and every motion window (owner, 2026-08-31). The pill's surface, the
+   drawer's slider. */
+.opacity-dock {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 35;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 18px rgba(22, 28, 36, 0.1);
+}
+
+/* At phone width the control pill spans the bottom; the dock steps above it. */
+@media (max-width: 640px) {
+  .opacity-dock {
+    bottom: 74px;
+    left: 12px;
+  }
+}
+
+.opacity-dock__row {
+  display: grid;
+  grid-template-columns: 64px 110px;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* The application title, riding the trigger's own row on every scale. Plain
+   text over the stage: no surface, no border — the words carry it. */
+.shell-title {
+  position: fixed;
+  top: 12px;
+  left: 60px;
+  height: 38px;
+  /* Page content, not chrome: under the scrim (40) and the drawer (50), so
+     an opened sidebar covers and dims it (owner, 2026-08-31) — unlike the
+     trigger, which must stay reachable to close what it opened. */
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* THE FLOOR HEADING — small name over large subject.
+   `docs/20260905-fix/body.md` §4 asks for this pair and the canon of 2026-09-05
+   fixes the small half at one of four words. It keeps every positioning and
+   stacking property of `.shell-title` above (both classes are on the element)
+   and changes only the axis and the two type sizes, so the cinematic fade and
+   the drawer's dim keep reaching it — they select `.shell-title`.
+   `height: auto` because two lines do not fit 38px, and the block hangs from
+   the same 12px top so the ☰ beside it stays on the first line. */
+.shell-title--floor {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  height: auto;
+  gap: 1px;
+}
+
+/* NO TRIGGER, NO CLEARANCE FOR ONE — 2026-09-06. `left: 60px` above is 12 of
+   page margin plus the ☰'s 38 plus 10 of gap, and it is right on the two
+   surfaces that draw a ☰ (the front door and BODY). On the three floors below
+   BODY the button came off in this same pass, so the heading was hanging 44 px
+   into empty paper and the corner read as though something had not loaded.
+   16 rather than 12 because the heading has no border to sit flush with, and 16
+   is the inset every other floating plate on these floors already uses
+   (`.fiber-levels`, `.energy-controls`, `.ways`). */
+.shell-title--alone { left: 16px; }
+
+/* Small, spaced and quiet: it is the label on the drawer of the cabinet, not
+   the thing in it. The four words are already upper case in `SCALE_LABEL`, so
+   nothing here re-cases them — a `text-transform` would silently "fix" a fifth
+   spelling instead of letting it show. */
+.shell-title__floor {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  /* Not black: the pair only reads as a pair if one half recedes. */
+  color: #6b7280;
+  line-height: 1;
+}
+
+/* The large half — what you are actually looking at. */
+.shell-title__subject {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: #000;
+}
+
+/* THE HEADING THAT PICKS THE MOVEMENT (body.md §12). Styled to read as the
+   heading it replaces, not as a control bolted beside one — same size, same
+   weight, same colour, and the only additions are the caret and what happens
+   when you point at it. `.shell-title` sets `pointer-events: none` so the
+   heading never eats a drag meant for the body; this one child takes them back. */
+.shell-title__pick {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 1px 5px 1px 0;
+  margin-left: -1px;
+  border: 0;
+  border-radius: 5px;
+  background: none;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: #000;
+  cursor: pointer;
+}
+.shell-title__pick:hover {
+  background: rgba(0, 0, 0, 0.055);
+}
+.shell-title__pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.shell-title__caret {
+  font-size: 10px;
+  color: #6b7280;
+  transform: translateY(-1px);
+}
+.shell-title__pick[aria-expanded="true"] .shell-title__caret {
+  color: #000;
+}
+
+/* The list itself. A glance, not a mode — so it floats, and nothing behind it
+   is blurred or locked (the drawer's scrim is far too much furniture for six
+   rows). Above the drawer's own z-index so opening one while the other is open
+   is not a stacking accident. */
+.shell-pick {
+  pointer-events: auto;
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 0;
+  z-index: 60;
+  min-width: 208px;
+  padding: 7px;
+  border: 1px solid #e2e5ea;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(16, 20, 28, 0.14);
+}
+
+.exlist--grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.exlist__group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+/* The two words body.md §12 asks for, drawn as a label and not as a row: a
+   heading that looks pressable in a list of pressable things is a seventh
+   movement that does nothing. */
+.exlist__heading {
+  margin: 8px 0 2px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  /* `#6b7280`, WHICH IS `.shell-title__floor`'S AND CLEARS THE FLOOR. This was
+     #8b929d and measured 2.95:1 against the paper — under AA's 4.5, and 10px at
+     weight 700 is still NORMAL text by that rule (large starts at 18.66px), so
+     the lighter grey had nothing to stand on. Reusing the floor label's grey
+     rather than picking a fourth: the two say the same kind of thing — a quiet
+     name over the thing it names — and one colour cannot drift from itself. */
+  color: #6b7280;
+}
+
+.menu-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Blur, dim and interaction lock in one element. CSS over the page, never a
+   change to any Three.js material — the render loop keeps running behind it.
+   `visibility` swaps after the fade so the closed scrim neither paints nor
+   takes a pointer. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  /* 0.10, NOT 0.18 — the same canon H4 as the blur below, and the same reason.
+     `frontDoor.test.js` holds the dim under 0.12: the drawer's controls act on
+     the body behind them, so a viewer choosing among them has to still be able
+     to read it. Rex's branch carried 0.18 across with the 5px. */
+  background: rgba(22, 28, 36, 0.10);
+  /* 1.5px, NOT 5px — canon H4, and the number is measured rather than tasteful.
+     H4 asked to see MORE of the body through the open menu, not less; past about
+     two pixels of blur two neighbouring muscle strands stop being two things and
+     the body behind the drawer becomes a texture. `saturate` does the rest of
+     the job the blur was doing — it pushes the body back without dissolving it.
+     Rex's branch carried 5px across; `frontDoor.test.js` holds this and says
+     why. */
+  -webkit-backdrop-filter: blur(1.5px) saturate(0.72);
+  backdrop-filter: blur(1.5px) saturate(0.72);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 260ms ease, visibility 0s linear 260ms;
+}
+
+.scrim--on {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 260ms ease;
+}
+
+/* The drawer: the same left panel it always was, taken out of the grid and
+   floated over it. Closed, it is off-screen AND hidden — `visibility` waits
+   for the slide out, and App.jsx sets `inert` so nothing inside is reachable
+   until it opens. */
+.drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 50;
+  width: min(320px, 85vw);
+  transform: translateX(-100%);
+  visibility: hidden;
+  transition: transform 260ms cubic-bezier(0.4, 0, 0.6, 1), visibility 0s linear 260ms;
+}
+
+.drawer--open {
+  transform: translateX(0);
+  visibility: visible;
+  box-shadow: 0 0 36px rgba(22, 28, 36, 0.2);
+  /* Decelerating in, so the panel lands instead of stopping. */
+  transition: transform 280ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer, .drawer--open, .scrim, .scrim--on { transition: none; }
+}
+
+/* ---- the crossing -------------------------------------------------------
+   RESTORED 2026-09-04, WITH THE HALF ITS OWN NOTE SAID WAS MISSING.
+   `ac2c83d` brought Rex's shell in and replaced this file wholesale; his branch
+   was cut before the crossing existed, so every rule below went with it while
+   `crossing.js` kept writing `data-crossing` on every scale change. The soft
+   zoom the owner asked for — *"그게 들어가는 느낌 그리고 되게 soft한 transition"*,
+   *"just zooms in and transitions, something very natural"* — has been dead code
+   since. That is what *"지금도 transition들은 안된듯?"* was.
+
+   The arriving scale settles into its framing instead of appearing in it.
+   `crossing.js` carries why only the arriving side moves and why the direction
+   is mirrored; this is the whole of the drawing.
+
+   ON THE CANVAS, NOT ON A CONTAINER. Every scale has exactly one and they are
+   named differently — `.press__stage`, `.fiber__stage`, `[data-testid=cell-stage]`
+   — so a container rule would need a list to fall out of date. It is also the
+   right element: the thing that should look like it moved is the picture, and
+   the panel beside it is furniture that was already told to stand aside.
+
+   THE ORIGIN IS THE MUSCLE NOW. The deleted rule said "`transform-origin: center`
+   and nothing else: an origin at the picked muscle would be better and is not
+   available here, because the crossing is drawn after the scene it came from is
+   gone." It is available: `beginCrossing` is handed the magnifier's own place on
+   the glass and writes it here as `--crossing-x/y`. Centre remains the fallback,
+   which is what a crossing from the trail or the ways out should still use.
+
+   AND THE DEPTH IS THE OWNER'S SECOND ASK. 1.045 was a settle you could miss;
+   *"진짜 들어가는 것처럼 들어가야돼"* is a push. 1.30 down against 0.86 up is far
+   enough to read as a distance and near enough that no frame shows the canvas
+   edge. Duration comes from `--crossing-ms` so `CROSSING_MS` stays the one
+   source — `descent.spec.js` asserts against the constant, not against this. */
+[data-crossing] canvas {
+  will-change: transform, opacity;
+  transform-origin: var(--crossing-x, 50%) var(--crossing-y, 50%);
+}
+[data-crossing="down"] canvas {
+  animation: crossing-down var(--crossing-ms, 620ms) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+[data-crossing="up"] canvas {
+  animation: crossing-up var(--crossing-ms, 620ms) cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+[data-crossing="swap"] canvas {
+  animation: crossing-swap 340ms ease both;
+}
+@keyframes crossing-down {
+  from { transform: scale(1.30); opacity: 0; }
+  38%  { opacity: 1; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+@keyframes crossing-up {
+  from { transform: scale(0.86); opacity: 0; }
+  38%  { opacity: 1; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+/* No scale on a movement change — a zoom there would claim a descent that is
+   not happening, and the two directions above have to keep meaning only that.
+   Down fast so the rig swap lands in the dark, back slowly so the new pose is
+   what a viewer watches arrive (owner, canon H6: *"blink 정도"*, *"서 있던
+   모델이 굳이 누워서 벤치프레스를 할 필요는 없다"*). */
+@keyframes crossing-swap {
+  0%   { opacity: 1; }
+  22%  { opacity: 0.12; }
+  100% { opacity: 1; }
+}
+
+/* THE FOURTH DIRECTION, 2026-09-05 — ENERGY → SIGNALS, and it is not `down`
+   with a bigger number.
+   `down` means "you have arrived inside something and are finding your distance
+   from it": 1.30 to 1, a settle. `docs/20260905-fix/signaling.md` §6 asks for
+   the opposite claim in the same gesture — "AMPK wasn't another 'level down.'
+   It was one part of something much larger" — and cell.md §16 from the other
+   side: *"여기서는 더 zoom-in하면 안 돼. 반대로 pull back하는 게 좋다."*
+   SO THE ARRIVAL OPENS ON ONE NODE AND KEEPS GOING. 2.05 is roughly the frame
+   filled by the thing the viewer was just looking at, and the whole travel to 1
+   is the network resolving AROUND it rather than replacing it. `Descent.jsx`
+   has already shrunk the leaving floor to 0.62 about the same point, so the
+   scale falls continuously across the cut — one recession in two halves rather
+   than a push answered by a pull.
+   HELD LONGER THAN THE OTHER THREE. `--crossing-ms` is 620 and a move this
+   large reads as a snap at that length; 1.6x is the smallest multiple where the
+   nodes appearing at the edges are legible as arrivals rather than as popping
+   in. It is the one beat in the app whose job is the change of scale itself. */
+[data-crossing="back"] canvas {
+  animation: crossing-back calc(var(--crossing-ms, 620ms) * 1.6)
+    cubic-bezier(0.24, 0.66, 0.3, 1) both;
+}
+@keyframes crossing-back {
+  from { transform: scale(2.05); opacity: 0; }
+  26%  { opacity: 1; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-crossing="down"] canvas,
+  [data-crossing="up"] canvas,
+  [data-crossing="back"] canvas,
+  [data-crossing="swap"] canvas { animation: none; }
+}
+
+/* Clears the fixed trigger, which doubles as the drawer's close. Two classes,
+   so `.panel`'s own padding — declared later in this file — cannot win it
+   back. The type baseline is pinned here too: the drawer renders inside
+   whichever scene mounted it, and the press scene's 13px root was quietly
+   shrinking one sidebar's typography out of the shared system. */
+.panel.drawer {
+  padding-top: 62px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.drawer__brand { display: grid; gap: 0.4rem; }
+
+/* ---- the drawer's shared grammar ----------------------------------------
+   One rhythm for every view's sidebar: sections divided by a hairline, a
+   quiet uppercase label, controls beneath. The values are the spacing scale
+   the whole surface runs on — 8px inside a control group, 16px between a
+   divider and its section, ~24px of visual air between sections. */
+
+.panel.drawer { gap: 1rem; }
+
+.drawer section + section,
+.drawer .fiber-controls section,
+.drawer .fiber-controls + section {
+  border-top: 1px solid var(--line);
+  padding-top: 1rem;
+}
+
+/* FiberControls slots its own sections straight into the drawer's column, so
+   the fibre view's controls pick up the shared dividers and spacing instead
+   of arriving as a differently-spaced block. */
+.drawer .fiber-controls { display: contents; }
+
+/* The one primary-action style for every step deeper: Show motion, View
+   muscle fiber, View the cell, View signalling. Accent-filled like the
+   motion button, full width, one height. */
+.drawer__primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer__primary:hover { background: color-mix(in srgb, var(--accent) 85%, #000); }
+
+.drawer__primary:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Two primary actions in one section stack with the internal gap. */
+.drawer__stack { display: grid; gap: 0.4rem; }
+
+/* Every slider in every drawer is the same slider — and the dock's too. */
+.drawer input[type="range"],
+.opacity-dock input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Compact muscle rows — swatch + name, the legend's own vocabulary. */
+.musclelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 12px;
+}
+
+.musclelist li { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Exercise rows read as a list, not a stack of outlined pills: the name is
+   quiet until hovered or selected, and the motion action sits right-aligned
+   as a compact glyph. */
+.exlist .chip--grow { border-color: transparent; }
+.exlist .chip--grow:hover { border-color: var(--accent); }
+
+/* The credit sits under the mesh counts; without this they read as one run-on
+   line of small print. */
+.drawer .note { margin-top: 0.45rem; }
+
+/* The breadcrumb chain at the top of every drawer — same trail, current scale
+   marked. It replaces the footers it used to ride in. */
+.drawer__crumb { color: var(--muted); }
+
+/* Back, at the top of every deeper scale's drawer. One control, one look. */
+.drawer__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.drawer__back:hover { border-color: var(--accent); }
+
+.drawer__back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The floating transport: the header each scale scene used to carry, reduced
+   to what must stay visible while the scene plays — the context label, the
+   clock, and the scale doors. Bottom-center on every scene (the motion scene
+   stacks it above its own transport pill). Under the scrim (z 32 < 40): while
+   the drawer is open it is visible but locked with the rest of the page. */
+.viewbar,
+.statusbar {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 32;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.6rem;
+  max-width: min(94vw, 46rem);
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  /* The same glass as `.press__controls`: one floating-pill language on every
+     scene, not a solid pill on one and a blurred one beside it. */
+  background: rgba(255, 255, 255, 0.86);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
+  font-size: 12px;
+}
+
+.viewbar--raised { bottom: 68px; }
+
+/* Loading and failure, floated above the transport rather than hidden in the
+   drawer — what is loading and what failed stays on screen (CLAUDE.md §9).
+   Its own class, NOT `.viewbar`: tests and the cinematic rule address the one
+   transport bar per scene, and a loading line must never be their second
+   match. */
+.statusbar { bottom: 68px; color: var(--muted); }
+
+/* Scenes with a right-hand readout panel (fiber/cell/signalling): center the
+   transport over the STAGE, not the viewport, so it neither crowds the panel
+   nor hides its own scale chips under the floating assistant. 272px is the
+   panel column fiber.css declares; below 1000px the panel stacks underneath
+   and the plain center is right again. */
+@media (min-width: 1001px) {
+  .viewbar--offset { left: calc((100vw - 272px) / 2); }
+}
+
+.viewbar__name { display: flex; align-items: baseline; gap: 0.4rem; white-space: nowrap; }
+
+.viewbar__sub { color: var(--muted); font-size: 11px; }
+
+@media (max-width: 640px) {
+  .viewbar { border-radius: 16px; }
+  .viewbar__sub { display: none; }
+}
+
+.drawer__sub {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---- layout ------------------------------------------------------------ */
+
+.body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 0;
+}
+
+.panel {
+  overflow-y: auto;
+  padding: 1rem;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.panel--left { border-right: 1px solid var(--line); }
+
+.stage {
+  position: relative;
+  min-width: 0;
+  /* The paper every other stage sits on (press.css, fiber.css) — moving from
+     the explorer to any deeper scale must not flash a background change. */
+  background: #faf8f5;
+}
+
+.panel h2 { margin: 0.2rem 0 0.6rem; font-size: 1.05rem; }
+
+/* ---- controls ---------------------------------------------------------- */
+
+.label {
+  margin: 0 0 0.5rem;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.chip:hover { border-color: var(--accent); color: var(--text); }
+
+.chip--on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--text);
+}
+
+/* AND THE GROUP ROW WEARS THE BUTTON'S OWN FACE — owner, 2026-08-31: "the blue
+   selected-state left these chips", selection reads as the UNSELECTED ones
+   dimming. `chip--on` is the app's one way of SAYING on (so a gate and a screen
+   reader can both find it); this is where that statement is painted as nothing,
+   which is the whole point of separating the two. */
+.chips .chip--on {
+  border-color: var(--line);
+  background: transparent;
+}
+
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* What the explorer's pick landed on. Over the stage rather than in the left
+   panel, because the answer to "what did I just click" has to be near what was
+   clicked. */
+.pick {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  white-space: nowrap;
+}
+/* BESIDE THE PICK — see `App.jsx`'s handler for the measurement. The pinned
+   form above stays as the fallback for a selection that arrived without a point
+   (the muscle search picks by name and has no pointer). */
+.pick--at {
+  position: fixed;
+  left: 0;
+  bottom: auto;
+  transform: translate(-50%, -100%);
+  z-index: 6;
+  pointer-events: none;
+}
+.pick span { color: var(--muted); }
+
+/* ---- the clock ----------------------------------------------------------
+   director/Timeline.jsx, in the header of every scale. Painted in
+   `currentColor` rather than in `--text` and `--line`, for the reason
+   ScaleTrail.jsx already carries: the body scale has its own dark mode
+   (press.css:154) and the palette variables do not follow it, so a track drawn
+   in ink is invisible there. */
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  /* Shrinkable to nothing, because a floor here is a floor the header cannot
+     get under: at 320 px a `min-width: 260px` on this pushed the way-down chip
+     to x=416 on a 320 px document that does not scroll. The track gives up its
+     width first; the play button and the clock reading are what must survive,
+     since a scrubber with no numbers on it is a slider for an unnamed quantity. */
+  min-width: 0;
+  flex: 1 1 200px;
+  max-width: 34rem;
+}
+.timeline input[type="range"] {
+  flex: 1 1 60px;
+  min-width: 60px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.timeline__read {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+/* Its own row on a narrow window. Sharing one with the phase readout and the
+   way-down chip left the clock reading at x=416 on a 320 px body scale even
+   after the track had shrunk to 137 px — the phase text is long and does not
+   yield. A row of its own is the only arrangement that fits all three. */
+@media (max-width: 820px) {
+  .timeline {
+    flex: 1 1 100%;
+    max-width: none;
+    order: 1;
+  }
+}
+
+.input {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.input:focus { outline: 1px solid var(--accent); }
+
+/* ---- legend and metadata ---------------------------------------------- */
+
+.legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; }
+
+.legend li { display: flex; }
+
+.role-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.role-toggle:hover { border-color: var(--line); }
+
+.role-toggle--on {
+  border-color: var(--line);
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Off state reads as excluded, not merely unhovered. */
+.role-toggle:not(.role-toggle--on) { opacity: 0.45; text-decoration: line-through; }
+
+.count {
+  margin-left: auto;
+  min-width: 1.6em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Swatch opacity mirrors the viewport encoding so the legend explains itself. */
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #d4644f;
+  outline: 1px solid var(--line);
+}
+.swatch--primary { opacity: 1; }
+.swatch--secondary { opacity: 0.55; }
+.swatch--stabilizer { opacity: 0.25; }
+
+.role { margin: 0 0 0.8rem; font-size: 12px; font-weight: 600; }
+/* THE THREE ROLE COLOURS, REPAINTED FOR THE PAPER THEY ARE ON — 2026-08-31.
+   `#ff8080`, `#ffb454` and `#9aa8bd` measured 2.28:1, 1.66:1 and 2.27:1 against
+   `--panel`: they are dark-theme values that came across with the palette and
+   were never re-checked against the light one under them. The middle one at
+   1.66:1 is barely a colour on that ground.
+   Repainted to the app's own measured family rather than to whatever passes:
+   the warm red the body scale already uses for a primary mover, the amber the
+   fibre uses for a secondary, and the slate every scale uses for "did not move".
+   6.11:1, 5.57:1, 5.65:1. The SWATCHES above keep their opacity ramp — that is
+   the encoding a viewer reads; this is the label beside it. */
+.role--primary { color: #a8362f; }
+.role--secondary { color: #8a5a10; }
+.role--stabilizer { color: #5a6472; }
+.role--inactive { color: var(--muted); }
+
+.meta { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 0.8rem; margin: 0 0 1rem; font-size: 12px; }
+.meta dt { color: var(--muted); }
+/* Mesh names run long ("abdominal part of left pectoralis major"), so wrap
+   inside the column instead of overflowing it. */
+.meta dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.note { margin: 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+
+/* ---- viewport overlays ------------------------------------------------- */
+
+/* One exercise per row: the name selects it, the button animates it. Laid out
+   as a list rather than wrapped chips so the Show-motion control sits in the
+   same place on every row and stays scannable down the column. */
+.exlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; }
+
+.exlist__row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem;
+  border-radius: 8px;
+}
+
+.exlist__row--on { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+.chip--grow { flex: 1 1 auto; justify-content: flex-start; }
+.chip--wide { width: 100%; justify-content: center; margin-bottom: 0.4rem; }
+
+/* The Show-motion control. One component, two sizes: full width under the
+   exercise list, compact on a row or in the viewer's exercise rail. */
+.btn-motion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-motion--md { width: 100%; margin-top: 0.55rem; }
+.btn-motion--sm { padding: 0.3rem 0.5rem; font-size: 11px; border-radius: 999px; }
+
+/* Glyph-only, for dense list rows: the words live in aria-label and title.
+   26px keeps the tap target the mobile layout gate holds at 22 minimum. */
+.btn-motion--xs {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.btn-motion--xs .btn-motion__glyph { font-size: 10px; }
+
+.btn-motion__glyph { font-size: 9px; line-height: 1; opacity: 0.9; }
+
+.btn-motion:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 85%, #000); }
+
+/* Focus has to be visible: this is the control keyboard users reach for, and
+   the accent background swallows the browser default. */
+.btn-motion:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Playing. Reads as engaged rather than as another call to action. */
+.btn-motion--on {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Disabled only when the exercise genuinely has no motion, and it says so. */
+.btn-motion--off,
+.btn-motion:disabled {
+  background: transparent;
+  border-color: var(--line);
+  border-style: dashed;
+  color: var(--muted);
+  cursor: not-allowed;
+  font-weight: 500;
+}
+
+.loader { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* ---- the ride ------------------------------------------------------------
+   src/cinematic.js sets the attribute for the length of a scale transition;
+   this is the whole of what it does. Here rather than in press.css or
+   fiber.css because the transition crosses both scenes and the rule has to
+   outlive the component swap in the middle of it.
+
+   Controls only. `.loader`, `.fatal` and both footers are deliberately absent:
+   what is loading, what failed and whose data this is do not stop being true
+   because a shot is playing, and CLAUDE.md §9 says that copy is never removed.
+   Do not extend this list without checking the thing you are adding is a
+   control. `pointer-events` goes with it so a pill that cannot be seen cannot
+   be hit either — the press that lands on it asks for the chrome back instead.
+
+   Asymmetric on purpose. Out is a cut: the transition is switched off in the
+   receded state, so the chrome is gone on the frame the move begins rather than
+   dissolving over the top of it. Back is a fade, which is what "settles" looks
+   like. CSS takes the transition from the style being moved *to*, so declaring
+   it in one place and `none` in the other is the whole of it. It is also what
+   makes the state measurable: a cut lands in one style recalculation, where a
+   320 ms fade sampled on a starved frame loop reads as any value at all. */
+.viewbar,
+.menu-trigger,
+.shell-title,
+.opacity-dock,
+.assistant,
+.assistant--min,
+.fiber__panel,
+.press__rail,
+.press__controls,
+.press__inspect {
+  transition: opacity 320ms ease;
+}
+/* THREE THINGS NEVER STAND ASIDE — 2026-09-06. Owner: *"pause go home버튼은
+   항상 떠 있어야돼 왼쪽 shell-title--floor도 항상"*.
+   `.shell-title` and `.ways` were in this list, so a cinematic shot took the
+   floor's name off the top left and the transport off the top right. That is
+   also the answer to *"signalling은 왜 shell-title shell-title--floor가 없어?"* —
+   it was there and the shot was hiding it, which is why it looked like a floor
+   that had never drawn one.
+   THE RULE UNDERNEATH: Pause is the only way out of a pass that now runs on
+   every arrival, and Go Home is the only way out of the app. A shot that hides
+   both is a shot a visitor cannot leave — which is exactly the state a hidden
+   Pause creates, and the reason it can never be part of the cinematic language
+   again. The rest of this list still stands aside; presence is the point of the
+   shot, and none of the rest is a way out. */
+[data-cinematic] .viewbar,
+[data-cinematic] .menu-trigger,
+[data-cinematic] .opacity-dock,
+[data-cinematic] .assistant,
+[data-cinematic] .assistant--min,
+[data-cinematic] .fiber__panel,
+[data-cinematic] .press__rail,
+[data-cinematic] .press__controls,
+[data-cinematic] .press__inspect {
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+/* The fade is the motion, so it is what goes. The controls still stand aside —
+   that is presence, not animation, and it is the point of the shot. */
+@media (prefers-reduced-motion: reduce) {
+  .viewbar,
+  .menu-trigger,
+  .shell-title,
+  .opacity-dock,
+  .assistant,
+  .assistant--min,
+  .fiber__panel,
+  .press__rail,
+    .press__controls,
+  .press__inspect {
+    transition: none;
+  }
+}
+
+/* ONE CHILD, NOT TWO. The explorer puts a left panel and a stage in `.body`;
+   the fibre, cell and signalling scenes put a single scene in it and used to
+   override only the columns, inline, in three files. `body--single` is that
+   override with a name, which is also what makes the media query below able to
+   tell the two layouts apart. */
+.body--single { grid-template-columns: 1fr; }
+
+@media (max-width: 1000px) {
+  .body { grid-template-columns: 1fr; grid-template-rows: auto 60vh; }
+  /* `.panel--left { border-bottom }` used to sit here for the stacked-row
+     layout. Its only remaining subject was the drawer — which is never a
+     stacked row — so the rule went with the layout it styled. */
+
+  /* THE ROW RULE ABOVE IS FOR THE EXPLORER'S TWO PANES AND WAS APPLIED TO ONE.
+     A single child landed on `auto`, which has no definite height, and
+     `.fiber { height: 100% }` against an indefinite row is 0 — measured, the
+     readout collapsed to a clientHeight of 32 over as much as 2,787 px of
+     content at every width from 320 to exactly 1000, and came back at 1001.
+     The 3D kept animating the whole time, so what vanished was every number in
+     this app that carries a provenance label and nothing else.
+
+     `1fr` gives the scene the row's real height back; `.fiber`'s own query then
+     stacks stage over panel. */
+  .body--single { grid-template-rows: 1fr; }
+}
+
+/* ---- workout input ----------------------------------------------------- */
+/* PRD-v2 §5.2's four fields and the mapping under them. No colour of its own:
+   the mapping is a reading, not an alert, and painting it as a warning would
+   make the honest half look like an error state. */
+
+.workout__fields { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.35rem; }
+
+.workout__field {
+  display: grid;
+  gap: 0.2rem;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.workout__field .input { padding: 0.35rem 0.4rem; font-size: 12px; }
+
+.workout__map { margin-top: 0.7rem; }
+
+.workout__chain { list-style: none; margin: 0 0 0.8rem; padding: 0; font-size: 12px; }
+.workout__chain li { padding-left: 1.1rem; text-indent: -1.1rem; }
+.workout__chain li::before { content: "→ "; color: var(--muted); }
+.workout__chain code { font-size: 11px; }
+
+.workout__list {
+  list-style: none;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ── THE WAYS OUT, RESTORED WITH THE MERGE — 2026-09-01 ───────────────────────
+   Rex's `styles.css` replaced this file wholesale and his branch was cut before
+   `Ways` existed, so every rule below went with it while the component kept
+   rendering. Screenshotted on the signalling and cell scales: `Pause`, the
+   scale's own way up and `Go Home` fell out of `position: absolute` into normal
+   flow at the top LEFT, stacked into a 54 px box on top of `.menu-trigger`
+   (fixed at 12/12) and across the application's title.
+   Nothing here is new. It is the same block, and the corner it names is the one
+   the owner put these in: the way OUT is top-right, and the way IN is never
+   here — it is in the picture, beside the thing you would enter. */
+/* ---- the ways out ------------------------------------------------------
+   Top-right on every scale, the corner grammar's "the ride" half: where you
+   go, and (when the pause lands) whether it is running. The way IN is not
+   here — it is in the picture, beside the thing you would enter.
+
+   Taken from `.press__ways`, which was already this corner on the body scale
+   and had already learned the two things that matter: the wrap must not eat a
+   pick (a transparent box over the stage made every muscle under it
+   unclickable), and it recedes with the rest of the chrome during a ride. */
+.ways {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  /* The empty box between the buttons must not swallow a pointer. */
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+
+/* AND WHERE A VIEW CUBE SHARES THE CORNER, THE TRANSPORT STANDS UNDER IT.
+   The cube is drawn inside the canvas by drei's `GizmoHelper` at `top-right`
+   with margin 78, so it has no box this stylesheet can ask about; measured on
+   the front door at 1280x800 it reaches y ≈ 115.
+   AND 128 WAS THE FRONT DOOR'S NUMBER, ON A FLOOR THAT DRAWS A BIGGER CUBE. The
+   BODY lane measured its own — roughly y 60-185 — and `Go Home` still landed on
+   top of it. A gizmo's drawn size follows the scene it hangs in, so a value read
+   off one screen is not a value for another. 200 clears the taller of the two
+   with room.
+   AND 200 LEFT A HOLE. Owner, 2026-09-06: *"cube 밑에 pause전에 공간이 너무
+   많아 natural 하게"*. Screenshotted on the body at 1280x800 the cube reaches
+   y ≈ 118 and `Pause` opened at 200 — eighty-two pixels of nothing between two
+   things that are meant to read as one stack. 134 leaves the gap the buttons
+   already keep between themselves (8) plus a little, which is what makes a
+   stack look stacked rather than assembled. */
+.ways--below-cube {
+  top: 134px;
+}
+.ways > * { pointer-events: auto; }
+
+.ways__go {
+  padding: 0.32rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bg) 86%, transparent);
+  backdrop-filter: blur(6px);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+/* THE PAUSE READS AS ONE WORD WITH A MARK, not as a glyph plus a word. The
+   icon is set to the cap height of the label beside it and takes its colour, so
+   the pair has one weight — which is what "뚱뚱해" was about: at 13 px the two
+   HEAVY VERTICAL BARs were the darkest thing in the corner. Measured before:
+   75 x 29. */
+.ways__pause {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ways__icon {
+  width: 9px;
+  height: 9px;
+  /* Optical, not metric: a mark sitting on the text baseline reads high next to
+     lowercase, so it drops half a pixel to sit with the x-height. */
+  margin-top: 0.5px;
+  flex: none;
+}
+.ways__go:hover { border-color: var(--accent); }
+.ways__go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* `.ways` USED TO BE HIDDEN HERE. See the note on the block above: Pause and
+   Go Home are the two ways out and a shot may not take them. */
+@media (prefers-reduced-motion: reduce) { .ways { transition: none; } }
+
+/* THE DRAWER'S DATA FOOT — 2026-09-07: three papers, one licence line. Quiet, one tone. */
+.drawer .papers { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.drawer .papers a { color: inherit; font-size: 12.5px; text-decoration: none; }
+.drawer .papers a:hover { text-decoration: underline; }
+.drawer .papers__hint { display: block; font-size: 10.5px; color: #6f6a63; }
+.drawer .credit { margin: 8px 0 0; font-size: 10.5px; line-height: 1.4; color: #6f6a63; }

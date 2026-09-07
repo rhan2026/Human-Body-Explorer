@@ -1,0 +1,475 @@
+/**
+ * The guide's own sheet.
+ *
+ * `Guide.jsx` carries why the character exists. What this file decides is how it
+ * sits on a picture without becoming the picture: it is the loudest thing on
+ * screen while it is speaking, and it has to stop being that the moment it stops.
+ *
+ * THE BUBBLE IS DRAWN HERE NOW. Owner, 2026-09-06: *"make a new text bubble that
+ * has the same margin width as the character. also, i want to make the character
+ * dragable"*. Until then the bubble was the owner's 768×512 drawing, used whole
+ * at a fixed size with the sentence fitted into it — the nine-slice tried before
+ * it showed its seam at 2×, so the drawing had to stay whole. That bought a
+ * bubble that never distorted and cost a ceiling on the sentence
+ * (`bubbleHolds.test.js` still holds every walk to it, as a reading budget). A
+ * bubble that is CSS grows to its sentence. What it keeps of the drawing: the
+ * ink outline and a tail toward the speaker; the halftone shadow went the same
+ * afternoon (*"delete the dots around the bubble"*).
+ *
+ * BESIDE THE CHARACTER, NOT ABOVE IT. The second cut stacked the bubble over the
+ * character with the tail coming down onto the handle, and the owner saw the
+ * tail sitting on the head: *"the text bubble kind of overlapps with the top
+ * part of the character. lets place the textbubble to the sides, and thus the
+ * pointed parts should be adjusted"*. So the row is back — SUBJECT · CHARACTER
+ * · BUBBLE, the reason in `Guide.jsx` — the tail points sideways at the face,
+ * and NOTHING OF THE BUBBLE REACHES THE CHARACTER'S FRAME: the gap between the
+ * two is exactly the tail's reach, so the tip stops at the frame's edge, and the
+ * character's own transparent margin (38 of 341 px — 10 px at this size) is the
+ * air between the tip and the colour.
+ *
+ * WEIGHT. The outline was 3 px against a character whose own line, drawn at
+ * 341 px and shown at 90, is under 2 — *"the margins are too thick compared to
+ * character"* — so it is 2 px. And the tail's square sits with its centre ON the
+ * outline's outer edge, where its two inked sides meet the outline in a mitre;
+ * inside it, the outline ran on under the tail (*"the margin lines enter the
+ * text bubble"*).
+ */
+.guide {
+  /* THE TAIL'S GEOMETRY, AS FIVE NUMBERS THAT HAVE TO AGREE — 2026-09-07.
+     Owner: *"the tail of bell's text bubble often appears disconnected with the
+     rest of the text bubble"*, and at 6x it was: the tail is a square turned
+     45°, so its MOUTH — the two corners that touch the bubble — is as tall as
+     its full diagonal, and that mouth was landing ON the bubble's rounded
+     corner. A one-line bubble was 41.8 px tall with a 14 px radius: 13.8 px of
+     straight edge for a 22.6 px mouth, so the tail's corners hung off a curve
+     that had already turned away and the outline read as broken. On a phone it
+     was 8.8 px of straight edge for a 17 px mouth — worse, and always.
+     So they are declared together and `guideTail.test.js` holds the one
+     inequality between them: the mouth fits inside the straight run,
+         radius + reach  ≤  up  ≤  min-height − radius − reach.
+     `--guide-say-min` is what makes that arithmetic true of the real box: the
+     vertical padding below already draws a one-line bubble taller than it, and
+     the min-height is the floor if a font ever renders shorter. */
+  /* The character's drawn width. The arrow reads it too — see `.guide__next`. */
+  --guide-body: 5.6rem;
+  --guide-tail-box: 15px;
+  /* Half the diagonal: box × 0.7071. How far the tip reaches past the outline,
+     and therefore also the gap, so the tip ends at the character's frame. */
+  --guide-tail-reach: 10.6px;
+  /* The tail's centre above the bubble's foot. Off the FOOT, not the middle:
+     the character's face is at a fixed height and a sentence grows upward. */
+  --guide-tail-up: 24px;
+  --guide-radius: 10px;
+  --guide-say-min: 48px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 7;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--guide-tail-reach);
+  /* The box is placed by its own transform (a spring in JS), so the element's
+     origin is the point it was asked to stand at and the two halves lay out
+     around it. Translated up by its own height so the character's feet are at
+     the anchor rather than its head. */
+  /* THE ANCHOR IS UNDER THE CHARACTER'S FEET. `translate` composes before
+     `transform`, so the animation loop keeps sole ownership of `transform` and
+     this still shifts the whole box up by exactly its own height — which, with
+     the row bottom-aligned, is where the feet are. A fixed `margin-top` did
+     this before and was wrong the moment the bubble changed height. */
+  transform-origin: 0 100%;
+  translate: 0 -100%;
+  /* THE BOX DOES NOT TAKE THE POINTER: the bubble must never block a click on
+     the picture under it. `.guide__body` turns it back on for the character
+     alone, which is the one thing here that can be picked up. */
+  pointer-events: none;
+  transition: opacity 260ms ease;
+}
+/* SUBJECT · CHARACTER · BUBBLE, and the reason is in `Guide.jsx`: the character
+   is the half that points, so it takes the near edge, and the words trail away
+   from the picture. DOM order is bubble-then-character (a reader should hear
+   the sentence before the decoration), so `--right` — the box to the RIGHT of
+   its subject, character at the box's left edge — is the reversed one. */
+.guide--right { flex-direction: row-reverse; }
+.guide--left { flex-direction: row; }
+
+.guide__body {
+  width: var(--guide-body);
+  position: relative;
+  z-index: 1;
+  height: auto;
+  flex: none;
+  /* A cartoon on a rendered 3D scene needs an edge or it looks pasted. This is
+     the same paper the plates use, thrown as a soft ring rather than a box. */
+  filter: drop-shadow(0 2px 10px rgba(22, 28, 36, 0.18));
+  /* THE TRANSFORM BELONGS TO THE ANIMATION LOOP and is not declared here — hop,
+     squash, lean, the mirror and the landing are one composed matrix written
+     per frame by `Guide.jsx`. A `transform` in this sheet would be overwritten
+     on frame one and read, from the file, as if it were doing something.
+     What the sheet does own is the origin: the squash has to happen against the
+     ground, or a landing reads as the whole character shrinking. */
+  transform-origin: 50% 100%;
+  will-change: transform;
+  /* THE ONE THING HERE THAT TAKES THE POINTER. Owner, 2026-09-06: *"i want to
+     make the character dragable"*. The box above stays `pointer-events: none`
+     so the words never block the picture; the character alone can be picked up.
+     `touch-action: none` is what lets pointer capture serve a finger without the
+     page scrolling out from under the drag; user-select and user-drag off so a
+     drag never starts a text selection or lifts the bitmap. The drag itself is
+     in `Guide.jsx`. */
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+.guide__body:active { cursor: grabbing; }
+
+/* THE BUBBLE IS TWO ELEMENTS: this wrapper holds the width, the fade and what
+   `--hushed` hides; the sentence's own box (`.guide__say`) carries the outline
+   and the tail and pops per sentence, so the pop's transform never touches the
+   layout. */
+.guide__bubble {
+  position: relative;
+  width: max-content;
+  /* The drawing's width, kept as the wrap point: `bubbleHolds.test.js` measured
+     every walk against it, and a longer line now WRAPS at it instead of being
+     clipped by it. */
+  max-width: 17.5rem;
+  /* UP OFF THE GROUND, so the tail meets the face and not the feet. The face is
+     the lower ball, its centre about 38 % of the frame above the feet (51 px at
+     5.6rem); the tail sits `--guide-tail-up` above the bubble's foot, so the
+     bubble stands the difference. Bottom-aligned rather than centred because a
+     sentence that grows should grow UPWARD, away from the ground and the
+     controls along it. */
+  margin-bottom: 1.7rem;
+  /* The fade out, for `--said` below; `visibility` flips at once on the way in
+     so a returning sentence is in the tree before its pop starts. */
+  transition: opacity 400ms ease, visibility 0s linear 0s;
+}
+/* SAID, AND PUT AWAY. Owner, 2026-09-06: *"the text bubble should disappear
+   after a few seconds after the appropriate reading time of the text within has
+   past"*. `Guide.jsx` times it — `readingMs` from `tour.js`, the rule every
+   other line already obeys, plus a linger. The bubble FADES and then leaves the
+   tree (`visibility`, after the fade); it is not `display: none`, because the
+   box is translated up by its own height, and a bubble taller than the
+   character leaving the layout would drop the character's feet the moment the
+   words go. `--hushed` is a different state — nothing to say, and the character
+   dims for it. This is the ordinary end of a sentence, so it does not.
+   `sayAgain()` in `sayAgain.js` brings the same sentence back with its pop. */
+.guide--said .guide__bubble {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 400ms ease, visibility 0s linear 400ms;
+}
+/* ON ITS WAY. Owner, 2026-09-06: *"it should hop onto the spot and the explaining
+   should start when the character has arrived at the spot"*. Between a beat
+   starting and the character standing on its spot the bubble is out — the same
+   fade as `--said`, shorter, so a short hop does not show a half-faded bubble —
+   and the character is NOT dimmed: it has something to say and is on its way to
+   say it. `Guide.jsx` decides arrival. */
+.guide--going .guide__bubble {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 160ms ease, visibility 0s linear 160ms;
+}
+
+/* THE SENTENCE'S OWN BOX: white paper and the drawing's outline, at the
+   character's weight. ONE SENTENCE AT A TIME, AND THE POP RUNS PER SENTENCE —
+   keyed on the text in `Guide.jsx`, so the span remounts and this replays; the
+   same trick `fiber.css` uses for the pass's line, and for the same reason: a
+   cross-fade between two sentences in one element reads as a flicker.
+   `fiberWalk.test.js` reads this animation's duration out of this file, so the
+   declaration keeps this shape. */
+.guide__say {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  /* The vertical padding is what makes a one-line bubble taller than
+     `--guide-say-min`, so the mouth always has straight edge to land on (see
+     the note on the variables). It is not decoration: shrink it and the tail
+     goes back onto the corner. */
+  padding: 0.8rem 0.85rem;
+  min-height: var(--guide-say-min);
+  border: 2px solid #161c24;
+  border-radius: var(--guide-radius);
+  background: #fff;
+  color: #161c24;
+  font-size: 0.82rem;
+  /* A STEP HEAVIER THAN THE PAGE. Owner, 2026-09-07: *"bold the text within
+     the textbox slightly"*. 500 — medium — is the one step every system face
+     has a name for: SF and Roboto carry it, Segoe falls back to regular. 600
+     is what the chrome's labels use and would make the sentence read as a
+     label; `.guide__term` at 680 still stands out of it. */
+  font-weight: 500;
+  line-height: 1.42;
+  animation: guide-say 260ms ease both;
+}
+/* THE POP GROWS FROM THE MOUTH — the tail's side, at the tail's height. */
+.guide--left .guide__say { transform-origin: 100% calc(100% - var(--guide-tail-up)); }
+.guide--right .guide__say { transform-origin: 0 calc(100% - var(--guide-tail-up)); }
+
+/* THE TAIL, on the sentence's box so it pops with it: a square turned 45°, two
+   adjacent sides inked, sitting half over the outline and hiding it with the
+   same white. Turned 45° clockwise, the square's TOP side becomes the diamond's
+   upper-right edge and its RIGHT side the lower-right, so those two inked point
+   right; LEFT and BOTTOM point left.
+   WHERE THE SQUARE'S CENTRE SITS IS THE WHOLE JOIN. The diamond's corners are
+   at its centre's height and depth, and the inked edges start there. With the
+   centre on the outline's OUTER edge the white cuts the outline at 45° and the
+   inked edges take over on that same line — a mitre. With the centre inside
+   the outline, the outline ran on under the tail for 2–3 px, which the owner
+   saw as "the margin lines enter the text bubble". So the offset off the
+   padding box is the 2 px border plus half the rotated box, less half a pixel
+   so the anti-aliased edges overlap rather than gap.
+   Its height is fixed off the bubble's bottom, not its middle: a sentence that
+   grows a line grows upward and the tail stays on the face.
+   BOTH OFFSETS ARE THE VARIABLES' ARITHMETIC and not numbers of their own, so
+   the phone block below restates only the five and the rest follows: `bottom`
+   puts the centre `--guide-tail-up` above the border box's foot (less the 2 px
+   border the padding box already excludes, less half the box), and the side
+   offset puts that centre half a pixel outside the outline. */
+.guide__say::after {
+  content: "";
+  position: absolute;
+  bottom: calc(var(--guide-tail-up) - 2px - var(--guide-tail-box) / 2);
+  width: var(--guide-tail-box);
+  height: var(--guide-tail-box);
+  background: #fff;
+  transform: rotate(45deg);
+}
+.guide--left .guide__say::after {
+  right: calc(-1 * (var(--guide-tail-box) / 2 + 2.5px));
+  border-top: 2px solid #161c24;
+  border-right: 2px solid #161c24;
+  border-top-right-radius: 2px;
+}
+.guide--right .guide__say::after {
+  left: calc(-1 * (var(--guide-tail-box) / 2 + 2.5px));
+  border-left: 2px solid #161c24;
+  border-bottom: 2px solid #161c24;
+  border-bottom-left-radius: 2px;
+}
+
+/* TYPED, NOT PASTED. Owner, 2026-09-06: *"the text should appear in the text
+   bubble letter by letter, as if it is typed manually. this is aimed to increase
+   legibility and interactiveness"*. `Guide.jsx` counts the letters; what the
+   sheet decides is that THE WHOLE SENTENCE IS IN THE BOX FROM THE FIRST FRAME,
+   the untyped part in transparent ink. So the bubble has its final width and its
+   final line breaks before the first letter shows, the words fill it in place,
+   and nothing re-wraps or moves as they arrive — a bubble that grew with its
+   sentence would walk the character with it. Present rather than absent also
+   means a screen reader gets the sentence whole, once. */
+.guide__untyped { color: transparent; }
+/* The caret rides the boundary and takes no width: a 2 px border, pulled back
+   by the same 2 px, so a word can never be pushed to the next line by it. It
+   blinks in steps because a typist's does; it is gone when the sentence is. */
+.guide__caret {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  margin-right: -2px;
+  border-left: 2px solid #161c24;
+  vertical-align: -0.15em;
+  animation: guide-caret 1s steps(1) infinite;
+}
+@keyframes guide-caret {
+  50% { opacity: 0; }
+}
+
+/* A POP, NOT A FADE. The bubble is a mouth opening; a linear fade reads as a
+   caption being composited on. The overshoot is small — this plays on every
+   sentence, and anything springier becomes a tic by the third one. */
+@keyframes guide-say {
+  0% { opacity: 0; transform: scale(0.94) translateY(4px); }
+  62% { opacity: 1; transform: scale(1.02) translateY(0); }
+  100% { opacity: 1; transform: none; }
+}
+/* A TERM THE READER IS MEETING FOR THE FIRST TIME. Weight and ink, not colour:
+   the tints on these scales all MEAN something — an arm, an activity, a control
+   — and a bold word borrowing one of them would be read as a claim about which
+   arm the word belongs to. */
+.guide__term {
+  /* 680 -> 740 AND A MARKER, 2026-09-07 — owner: *"text가 너무 bland 해 … bold나
+     그 이상"*, *"색깔도 살짝"*. The marker is a highlighter under the words, not a
+     hue on them: every tint on these floors means an arm or an activity, and a
+     word painted in one would be read as a claim about which. */
+  font-weight: 740;
+  color: #0f141b;
+  /* Width only: the padding is here so the word's footprint is final from the
+     first frame. The marker itself is on `.guide__mark` below. */
+  border-radius: 2px;
+  padding: 0 0.08em;
+}
+/* THE HIGHLIGHTER, ON THE LETTERS THAT HAVE ARRIVED — 2026-09-07. Owner: *"the
+   yellow underscore appears before the text is written. make it so that the
+   yellow underscore appears simultaneously with the word highlighted"*. On the
+   `<b>` it covered the untyped remainder too, because the whole sentence is in
+   the box from the first frame (`Guide.jsx`) so that nothing re-wraps. An
+   inline background is only as wide as its own text, so putting it on the typed
+   half alone makes the stripe grow letter by letter with the word. */
+.guide__mark {
+  background: linear-gradient(transparent 58%, rgba(236, 178, 92, 0.42) 58%);
+  border-radius: 2px;
+}
+/* ONE STEP ON, BY HAND — 2026-09-07. Owner: *"make a small arrow button that
+   manually moves the user to bell's next text bubble"*. It rides in the
+   sentence's own box, in the corner AWAY from the tail: the tail is on the
+   character's side at its own height, so the two never meet. `.guide` is
+   `pointer-events: none` — the words must never block the picture — so this
+   turns it back on for itself, exactly as the character does.
+   ABSOLUTE, so it costs the sentence no width: the whole line is in the box from
+   the first frame, and a control in the flow would re-wrap it. */
+.guide__next {
+  position: absolute;
+  /* Beside the box, on the far side from the character, level with the
+     character's own middle — outside the words (owner, 2026-09-07: *"the arrow
+     button should be out of the text box"*) and never over the tail, which is
+     on the character's side.
+     OFF THE CHARACTER'S HEIGHT, NOT THE BOX'S: the box grows with the sentence
+     and vanishes to just the character on a wordless beat, and the control has
+     to sit still through both. The drawing is 341x512, so at `--guide-body`
+     wide it is 1.5 times that tall and its middle is 0.75 of the width up. */
+  bottom: calc(var(--guide-body) * 0.75);
+  translate: 0 50%;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 6px rgba(22, 28, 36, 0.12);
+  color: #161c24;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: background 140ms ease, color 140ms ease;
+}
+.guide--left .guide__next { left: -26px; }
+.guide--right .guide__next { right: -26px; }
+.guide__next svg { display: block; width: 13px; height: 13px; }
+.guide__next:hover { border-color: var(--accent); color: var(--accent); }
+.guide__next:focus-visible { outline: 2px solid #161c24; outline-offset: 1px; }
+
+/* THE TITLE LINE — see `emphasise()`. Small, spaced, warm ink; its own line. */
+.guide__title {
+  display: block;
+  margin-bottom: 0.22em;
+  font-size: 0.72em;
+  font-weight: 760;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #8a5a2b;
+}
+
+/* The part's own name, run in at the head of the line — the same grammar the
+   deep scales' `say__of` already uses when a visitor pressed for a sentence. */
+.guide__of {
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.guide__of::after {
+  content: " — ";
+  font-weight: 400;
+  color: #636c7b;
+}
+
+/* NOTHING TO SAY, SO NOTHING IS SAID. The character stays — it walked here, and
+   removing it mid-visit would read as it having left — but the bubble goes. */
+.guide--hushed .guide__bubble { display: none; }
+.guide--hushed .guide__body { opacity: 0.55; }
+
+@media (max-width: 560px) {
+  /* SMALLER, NOT RESTACKED. The bubble's tail points at the character, so
+     putting the words above it would leave the tail aiming at nothing. Both
+     halves shrink together and the arrangement survives.
+     ONLY THE FIVE ARE RESTATED — the offsets, the gap and the pop's origin are
+     their arithmetic and follow on their own. The inequality holds here too:
+     8 + 8.5 ≤ 20 ≤ 41 − 8 − 8.5. */
+  .guide {
+    --guide-tail-box: 12px;
+    --guide-tail-reach: 8.5px;
+    --guide-tail-up: 20px;
+    --guide-radius: 8px;
+    --guide-say-min: 41px;
+  }
+  .guide { --guide-body: 4.2rem; }
+  .guide__bubble {
+    max-width: 13.6rem;
+    /* Face centre ~38 px above the feet at this size; the tail sits 20 px up. */
+    margin-bottom: 1.15rem;
+  }
+  .guide__say {
+    padding: 0.65rem 0.7rem;
+    font-size: 0.74rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide__say { animation: none; }
+  .guide { transition: none; }
+  .guide__bubble { transition: none; }
+  .guide__caret { animation: none; }
+  /* The hop is written per frame from JS and cannot be turned off by a media
+     query, so the sheet takes the transform back for anyone who asked for less
+     motion. `!important` is the only lever CSS has over an inline style. */
+  .guide__body { transform: none !important; }
+}
+
+/* THE SENTENCE THE CHARACTER IS CARRYING, still in the document.
+   The three deep scales already had a `.fiber__spent` line: it is their live
+   region, and a pile of browser cases wait on it appearing and disappearing.
+   The guide took over SAYING it, so this takes it off the picture and changes
+   nothing else — not `display: none`, which would drop it out of the
+   accessibility tree and silence the pass for anybody not looking at it. */
+.say--carried {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── THE WAIT AND THE FAILURE — the API lane's block, `Guide.jsx` says why ────
+   The answer itself is a line handed in through `bellSays` and typed like any
+   other; the sheet has nothing to add for it. While the model runs the bubble
+   holds the three dots, and when it cannot answer, the error line. */
+.guide__say--thinking {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 4.2rem;
+}
+
+/* THE THINKING DOTS, the assistant's own (assistant.css): three quiet marks
+   taking turns — ~1.1 s a cycle, a small opacity change, 2 px of travel — the
+   same restraint the strobe gate measures the stage by. */
+.guide__dots {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 2px;
+}
+.guide__dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.35;
+  animation: guide-think 1.1s ease-in-out infinite;
+}
+.guide__dots span:nth-child(2) { animation-delay: 0.18s; }
+.guide__dots span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes guide-think {
+  0%, 55%, 100% { opacity: 0.35; transform: translateY(0); }
+  25% { opacity: 1; transform: translateY(-2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guide__dots span { animation: none; opacity: 0.6; }
+}

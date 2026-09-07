@@ -1,0 +1,72 @@
+/**
+ * The footer's one route to the papers. Same tokens as everything else —
+ * `--bg`, `--line`, `--muted`, `--accent` from styles.css — and the summary is
+ * styled like `.prov-record > summary`, because it is the same gesture one
+ * level up: quiet until asked.
+ */
+
+.sources {
+  position: relative;
+}
+
+.sources > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  list-style: none;
+}
+.sources > summary::-webkit-details-marker {
+  display: none;
+}
+.sources[open] > summary {
+  color: var(--text);
+}
+
+/* Opens upward: the control lives in a footer, and downward is off the page. */
+.sources__panel {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  list-style: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: 0 -8px 28px rgb(0 0 0 / 10%);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.sources__panel li {
+  display: grid;
+  gap: 0.1rem;
+  padding: 0.45rem 0;
+}
+.sources__panel li + li {
+  border-top: 1px solid var(--line);
+}
+
+.sources__name {
+  font-weight: 600;
+}
+
+.sources__of {
+  color: var(--muted);
+}
+
+.sources__links {
+  display: flex;
+  gap: 0.75rem;
+}
+.sources__links a {
+  color: var(--accent);
+}

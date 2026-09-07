@@ -1,0 +1,225 @@
+/**
+ * The question box's sheet. `AskBell.jsx` carries why it exists and where it
+ * sits; this decides how it looks: the opacity dock's surface and layer, the
+ * transport pills' radius, the app's one accent on the one button that sends.
+ *
+ * z-index 35 — the dock's and the pick pill's. Below the drawer (50), so an
+ * open drawer's scrim blurs and disables this along with the rest of the page.
+ * One interaction hierarchy, decided once (assistant.css said this first).
+ */
+.ask {
+  position: fixed;
+  /* THE BOTTOM-RIGHT CORNER — Bell's, until the owner, 2026-09-07: *"i want the
+     text box to be on the bottom right corner, where bell's default position
+     is right now. also i want the box to be a bit longer. thus, bell's default
+     would have to move somewhere else"*. Bell stands on top of it now
+     (`Guide.jsx` reads this box's top per frame). 28 px in and up: the dock's
+     18 plus the ten the owner asked for on seeing it in the corner (*"shift
+     slightly to left and up"*). Twenty more each way were tried and taken
+     back the same hour (*"revert to the second version"*). 30rem: 22 at
+     first, 25 (*"a bit longer"*), then 30 (*"make textbox longer to the
+     left"*) — anchored on the right, so the length grows leftward. */
+  right: 28px;
+  bottom: 28px;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 30rem;
+  max-width: calc(100vw - 36px);
+  height: 44px;
+  margin: 0;
+  padding: 0 0.4rem 0 0.45rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 18px rgba(22, 28, 36, 0.1);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 160ms ease;
+}
+.ask:focus-within { border-color: var(--accent); }
+
+/* IT STANDS IN ONE PLACE ON EVERY FLOOR — owner, 2026-09-07: *"i want the user
+   tex box to be in the identical locaiton for all windows"*. Two floors keep a
+   bar across the bottom centre that a box this long reaches — the body's rep
+   timeline and SIGNALS' scrubber — and the box used to step ABOVE them, which
+   is how it came to have three heights. The bars move instead: they centre in
+   the stage less this box's footprint (`--ask-reserve` in styles.css), which
+   is the owner's own call — *"move the center motion progress bar to the left a
+   bit so the text box is in the same location to otehr widows"*.
+   The two classes stay, carrying nothing, because main.jsx still says which
+   floor it is on and a floor may yet need something of its own; `askBell.test.js`
+   holds them equal to the plain box so they cannot quietly start moving it. */
+.ask--over-time,
+.ask--over-scrub { bottom: 28px; }
+
+/* Closed: a pill that says what it is, no field. */
+.ask--closed {
+  width: auto;
+  height: 36px;
+  padding: 0 0.8rem 0 0.45rem;
+  gap: 0.45rem;
+  cursor: pointer;
+}
+.ask--closed:hover { border-color: var(--accent); }
+
+.ask__bell {
+  width: 20px;
+  height: auto;
+  flex: none;
+  filter: drop-shadow(0 1px 3px rgba(22, 28, 36, 0.18));
+}
+
+.ask__label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* The character at the left end is the open/close: press it to put the box
+   away, press the pill to bring it back. */
+.ask__fold {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  flex: none;
+}
+.ask__fold:hover { background: var(--panel); }
+
+.ask__input {
+  flex: 1;
+  min-width: 0;
+  height: 32px;
+  padding: 0 0.2rem;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+}
+.ask__input:focus { outline: none; }
+.ask__input::placeholder { color: var(--muted); }
+
+.ask__btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  flex: none;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+}
+.ask__btn:hover { border-color: var(--accent); color: var(--text); }
+.ask__btn svg { display: block; width: 14px; height: 14px; }
+
+/* The one filled button on the box: the accent, as everywhere else the app
+   says "this one acts". Disabled while there is nothing to ask. */
+.ask__send {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+.ask__send:hover { background: color-mix(in srgb, var(--accent) 85%, #000); color: #fff; }
+.ask__send:disabled { opacity: 0.4; cursor: default; }
+.ask__send:disabled:hover { background: var(--accent); }
+
+/* WHAT WAS ASKED, beside the box for a few seconds: the visitor's own words in
+   the visitor's own tint, the same tint the parked assistant gave a visitor's
+   line. Not a reply and not a thinking state — nothing is answering yet, and
+   the box says only what is true.
+   BESIDE, TO THE LEFT, NOT ABOVE: Bell stands on the box and its bubble hangs
+   over the box's left half, and a chip above the box ran into a two-line
+   bubble by 5 px (measured 2026-09-07). Left of the box the foot is clear on
+   every floor — the two floors' furniture is what the box steps above. */
+.ask__asked {
+  position: absolute;
+  right: calc(100% + 8px);
+  bottom: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 18rem;
+  padding: 0.35rem 0.3rem 0.35rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius: 12px 12px 4px 12px;
+  background: color-mix(in srgb, var(--accent) 12%, #fff);
+  font-size: 12px;
+  color: var(--text);
+}
+.ask__asked span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ask__dismiss {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.ask__dismiss:hover { color: var(--text); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+
+.ask--closed:focus-visible,
+.ask__fold:focus-visible,
+.ask__btn:focus-visible,
+.ask__dismiss:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* AT PHONE WIDTH the control pill spans the foot and the dock steps to 74 px
+   (styles.css); the box does the same. Open it takes the width; closed it
+   keeps to the right end — the dock has the left on the front door. */
+@media (max-width: 640px) {
+  .ask {
+    left: 12px;
+    right: 12px;
+    bottom: 74px;
+    width: auto;
+    max-width: none;
+  }
+  /* The two floors' furniture sits higher on a phone: the rep timeline's top is
+     144 px up at 390 wide, and SIGNALS stacks its controls in the bottom
+     111 px (Guide.jsx measured that for the character's own floor). Ten px of
+     air over each. Bell reads the box's top per frame and rides up with it. */
+  /* The phone keeps the step-up: there is no foot-right to reserve when the box
+     spans the width, so it stands above the two bars as before. */
+  .ask--over-time { bottom: 154px; }
+  .ask--over-scrub { bottom: 121px; }
+  .ask--closed {
+    left: auto;
+    right: 12px;
+  }
+  /* No room beside a box that spans the width: what was asked goes above it,
+     hugging the left, under Bell's bubble which stands 150 px up here. */
+  .ask__asked {
+    right: auto;
+    left: 0.6rem;
+    bottom: calc(100% + 8px);
+    max-width: calc(100% - 1.2rem);
+    border-radius: 12px 12px 12px 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask,
+  .ask__btn { transition: none; }
+}

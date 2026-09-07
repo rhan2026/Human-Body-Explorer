@@ -1,0 +1,273 @@
+/**
+ * The ENERGY floor's chrome — everything that floats over the stage. The 3D is
+ * `cellChainGeometry.js`; the sentences are the guide's. This sheet only places
+ * things, on the paper every other stage uses, and keeps four rules that other
+ * scales still import through `signalling.css`'s `@import` of this file.
+ *
+ * REWRITTEN 2026-09-05 with the floor (ENERGY.md). The readout rules that used
+ * to fill this file — `.cell-track*`, `.cell-legend`, `.cell-switch*`, the two
+ * arm colours' text classes — went with the panel and the switches they styled.
+ * Grepped before deleting: nothing outside this file used any of them; the one
+ * `data-testid="cell-switches"` in the old page is a test id, not a class.
+ *
+ * TRIMMED 2026-09-06 (docs/20260906-fix/energy.md). The rep strip and its
+ * arrival pulse (`.energy-clock*`, `energy-arrived`) went with owner item 14 —
+ * *"timeline같은거 그냥 쳐 빼"* — and the one standing label's rule went with
+ * brief §8 and global rule 5. `cellCss.test.js` pins all three absent.
+ *
+ * WHAT STAYS FOR OTHERS, and who reads it:
+ *   `--arm-*`             signalling.css:29-37 (its legend), textClearsItsPaper.test.js
+ *   `.cell-out-of-range`  FiberMetrics.jsx:169, SignallingReadout.jsx:122,158
+ *   `.fiber.cell-stage-only`, `.cell-stage-notices`, `.cell-stage-notice`  this page
+ *
+ * WHERE EVERYTHING STANDS, all `position: absolute` inside `.fiber__stage`:
+ *   top-left      the notice stack (56 px down, under the fixed ☰; the shell owns the name)
+ *   mid-left      the level ladder, `.fiber-levels` (fiber.css) — not ours
+ *   top-right     the ways out, `.ways` (styles.css) — not ours
+ *   bottom-left   the controls, on the stage's own inset
+ *   bottom-right  the guide at home (Guide.jsx), and the CTA above it
+ */
+
+/* THE THREE ARM COLOURS. Text colours first (5.58 / 4.82 / 4.55 on the stage's
+   paper — `textClearsItsPaper.test.js` holds all three above 4.5), and the
+   control's is also a material: `CONTROL_TINT` in `signallingGeometry.js` is
+   the same literal and `cellClaims.test.js` ties them, so it cannot move here
+   without moving the 3D with it. The ENERGY floor draws no control arm; these
+   live here because `signalling.css` imports this file for them. */
+:root {
+  --arm-resistance: #8f544c;
+  --arm-endurance: #517286;
+  --arm-control: #6f6a63;
+}
+
+/* A disclosure, marked as an interruption rather than left to read as body
+   text: the link asked for an instant this run does not have. CLAUDE.md §5,
+   "조용한 스냅은 버그다". */
+.cell-out-of-range {
+  border-left: 2px solid #ff8a5c;
+  padding-left: 0.5rem;
+}
+
+/* THE STAGE TAKES THE WHOLE GRID, 2026-08-30. `.fiber` in fiber.css reserved a
+   272 px column for a panel this scale no longer has (owner: "right sidebar
+   삭제해"); measured at 1201, the canvas stayed 929 px until this landed. And
+   the rows: under 1000 px `.fiber` splits into a 42 vh stage over a panel row,
+   which put the whole picture in the top 269 px of a 640 px phone with blank
+   paper under it. Two classes so it wins at every width; declared on the base
+   rule so there is no breakpoint to keep in step with fiber.css's. */
+.fiber.cell-stage-only {
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+/* ---- the paper --------------------------------------------------------- */
+
+/* One pill for every word floating on this stage: the stage's own `#faf8f5`
+   (`.fiber__stage`, `SCENE.background`) at 92 %, blurred, so a sentence over
+   a molecule stays legible without reading as a panel. The one interactive
+   surface adds the ladder's edge and lift below, so a control reads as one. */
+.cell-stage-notice,
+.energy-controls,
+.energy-card,
+.energy-hover {
+  margin: 0;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, #faf8f5 92%, transparent);
+  backdrop-filter: blur(4px);
+}
+.energy-controls {
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(38, 34, 29, 0.12);
+}
+
+/* ---- top-left: the notices ------------------------------------------ */
+
+/* 56, DERIVED: the `☰` trigger is `position: fixed; top: 12px; height: 38px;
+   z-index: 60` (styles.css `.menu-trigger`), so it owns viewport rows 12–50 and
+   a stage-relative 56 clears it at every width. THE FLOOR'S NAME IS NOT DRAWN
+   HERE: the shell paints "ENERGY / Cellular Energy" in this corner from
+   `SCALE_SUBTITLE` (orchestrator, measured 2026-09-05 at [60,12,118,31]), and a
+   second copy from this file drew over it. The out-of-range banner is the
+   sentence that says the picture is not answering the question asked, so it
+   may not share pixels with anything. One positioned stack, lines flowing inside it — two absolute
+   lines at the same corner once drew on top of each other (measured, both at
+   y 104). Width capped so a long banner wraps in the corner. */
+.cell-stage-notices {
+  position: absolute;
+  top: 168px; /* under the Condition plate, which took 56 on 2026-09-07 (cell C4) */
+  left: 16px;
+  z-index: 3;
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+  max-width: min(430px, calc(100% - 32px));
+  pointer-events: none;
+}
+
+/* ---- top-left: the controls (since 2026-09-07) ----------------------------------------- */
+
+/* Three things, cell.md §9: CONDITION (Normal · Calcium path off), VIEW (Whole
+   set · One repetition), Replay. Expected markup: each group is a direct child
+   holding a `.label` (styles.css's 10 px uppercase heading) over stacked
+   `.fiber-levels__rung` buttons with a `.fiber-levels__dot` — the ladder's own
+   dot-and-word rung, which is the radio list cell.md draws (● Normal / ○
+   Calcium path off). Replay is a bare rung as a direct child.
+
+   16 FROM THE FOOT, THE STAGE'S OWN INSET (the notices' `left`, the CTA's
+   `right`). It stood at 48 = 12 + 24 + 12 while the rep strip ran under it;
+   the strip went on 2026-09-06 (owner item 14) and the derivation went with
+   it. Groups sit side by side and wrap: at 390 the two groups (≈154 + 140 px
+   of rungs) fit one row inside the 344 px this leaves and Replay drops to a
+   second, which is the "wraps at 390" the floor asked for. `align-items:
+   flex-end` keeps Replay on the rungs' baseline rather than the labels'. */
+.energy-controls {
+  position: absolute;
+  left: 16px; /* TOP-LEFT — 2026-09-07, owner (cell C4): *"왼쪽 위 모든건 왼쪽 위 ㅠㅠ"*; same corner as FIBER's ladder */
+  top: 56px;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 14px;
+  max-width: calc(100% - 32px);
+  padding: 7px;
+  border-radius: 15px;
+}
+/* Groups only — Replay is a bare rung as a direct child and keeps its own row. */
+.energy-controls > :not(button) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+}
+.energy-controls .label {
+  margin: 0 0 2px 4px;
+}
+
+/* ---- near the pointer: the hover label and the card --------------------- */
+
+/* Both ride drei's `<Html>`, whose wrapper is translated to the part's
+   projected point; this offsets the pill to the right of that point so the
+   words sit beside the molecule rather than on it. Neither takes the pointer —
+   a label under the cursor that swallowed the hover would flicker the hover
+   that raised it. `max-content` because an absolute box at a point with no
+   width shrink-wraps word by word. */
+.energy-hover,
+.energy-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: 14px -50%;
+  width: max-content;
+  color: var(--text);
+  pointer-events: none;
+}
+.energy-hover {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+/* Name over one line, and only that (cell.md §10: "이름과 한 줄만"). */
+.energy-card {
+  max-width: 220px;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.energy-card__name,
+.energy-card strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* ---- bottom-right: the way to the network ------------------------------ */
+
+/* "See the network →", the floor's one call to action. The accent fill is the
+   app's one style for a step deeper (`.drawer__primary`, `.btn-motion`) worn
+   as a pill because the stage's floating grammar is pills (`.ways__go`,
+   `.pick`). White on the accent is the gate's listed exception.
+
+   132 FROM THE FOOT, ABOVE THE GUIDE AT HOME. Measured on Guide.jsx and the
+   drawing: the hushed character's feet are clamped 40 up, its 89.6 px body is
+   135 tall, its ink starts ~20 px below the box top, so ink reaches ~155 up and
+   ends ~163 in from the right edge. This pill is ~143 wide at 16 from the
+   right, ending ~159 in — clear of the ink by a few pixels, not by a margin.
+   z 5: over the controls, under the guide (7), which is `pointer-events:
+   none` and so cannot take a press meant for this. */
+.energy-network {
+  position: absolute;
+  right: 16px;
+  bottom: 132px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.42rem 0.85rem;
+  /* PAPER, NOT A BLOCK OF ACCENT — 2026-09-06. It was the only saturated fill on
+     any of the four floors: every other control here is ink on paper, and a
+     filled blue pill in the corner of a cell read as a web page's button that
+     had wandered into a microscope. It is still the loudest control on the floor
+     — accent ink, accent rule, the shadow — without being the only place on the
+     screen where a colour means "press me" rather than "this is what I am". */
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: color-mix(in srgb, #faf8f5 92%, transparent);
+  backdrop-filter: blur(4px);
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(38, 34, 29, 0.16);
+}
+.energy-network:hover { background: color-mix(in srgb, var(--accent) 12%, #faf8f5); }
+.energy-network:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* ON A PHONE THE CTA CANNOT BE BOTTOM-RIGHT. At 390 the wrapped controls run
+   from 16 to ~338 across and ~116 tall, so a pill at bottom 132 lands on their
+   top row. It steps to the right column's top instead, under the ways out
+   (`.ways`: top 16, three 29 px pills and two 8 px gaps end at 119) — the
+   corner that already means "where you go". The Guide's home corner is not
+   ours to move; see the note to the integrator. */
+@media (max-width: 640px) {
+  .energy-network {
+    bottom: auto;
+    top: 132px;
+  }
+}
+
+/* ---- the ride ------------------------------------------------------------ */
+
+/* Controls recede while the crossing plays — the same rule `.fiber-levels`
+   and `.ways` take. A control lit inside the shot it starts is the previz
+   defect `descent.spec.js` measures. The title stays: it is not a control, and
+   CLAUDE.md §9 keeps what says where you are. Out is a cut, back is a fade,
+   for the reason styles.css states beside its own list. */
+.energy-controls,
+.energy-network {
+  transition: opacity 320ms ease;
+}
+.energy-network {
+  transition: opacity 320ms ease, background 160ms ease;
+}
+[data-cinematic] .energy-controls,
+[data-cinematic] .energy-network {
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .energy-controls,
+  .energy-network {
+    transition: none;
+  }
+}
